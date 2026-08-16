@@ -1078,6 +1078,44 @@ body[data-df-page="server-list"] td[data-df-role="avatar"] {
     flex-shrink: 0;
 }
 
+/* Icon-variant (Pelican's per-egg image): show the icon on a subtle aurora frame */
+.df-avatar.df-avatar-icon {
+    background: rgba(11, 10, 30, 0.85);
+    background-size: 70% 70%;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid var(--df-glass-border-strong);
+    box-shadow: 0 0 22px rgba(56, 225, 255, 0.20), inset 0 0 12px rgba(94, 234, 212, 0.10);
+}
+
+/* Preserve the egg-icon banner as a subtle background decoration on the whole card */
+body[data-df-page="server-list"] .fi-ta-table tbody tr::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 55%;
+    background-image: var(--df-egg-icon, none);
+    background-position: right center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.10;
+    pointer-events: none;
+    mask-image: linear-gradient(to left, black 0%, black 40%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, black 0%, black 40%, transparent 100%);
+    z-index: 0;
+}
+
+/* Keep the card's real content above the decoration */
+body[data-df-page="server-list"] .fi-ta-table tbody tr > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Hide Pelican's original decorative div (we're rendering our own via ::before) */
+body[data-df-page="server-list"] .fi-ta-table tbody tr div[style*="/storage/icons/egg/"] {
+    display: none !important;
+}
+
 /* Name — biggest, Orbitron */
 body[data-df-page="server-list"] td[data-df-role="name"] {
     display: flex !important;

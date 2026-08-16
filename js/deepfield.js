@@ -402,12 +402,32 @@
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
 
+    // Find Pelican's per-egg icon URL if present in the row DOM.
+    // Pelican renders it as inline background-image on a decorative div.
+    function findEggIconUrl(tr) {
+        // 1. Look through descendant elements for inline style with background-image url
+        const withStyle = tr.querySelectorAll('[style*="background"]');
+        for (const el of withStyle) {
+            const style = el.getAttribute('style') || '';
+            const m = style.match(/url\(['"]?([^'")]+\/storage\/icons\/egg\/[^'")]+)['"]?\)/i);
+            if (m) return m[1];
+        }
+        // 2. Fall back to any <img> in the row pointing at the icons dir
+        const img = tr.querySelector('img[src*="/storage/icons/egg/"]');
+        if (img) return img.getAttribute('src');
+        return null;
+    }
+
     function reflowCards() {
         const rows = document.querySelectorAll('body[data-df-page="server-list"] .fi-ta-table tbody tr');
         rows.forEach((tr, idx) => {
             if (tr.__dfReflowed) return;
             tr.__dfReflowed = true;
             tr.style.setProperty('--df-idx', idx);
+
+            // Pull the egg icon URL BEFORE we tag/hide cells
+            const eggIcon = findEggIconUrl(tr);
+            if (eggIcon) tr.style.setProperty('--df-egg-icon', `url("${eggIcon}")`);
 
             const cells = Array.from(tr.querySelectorAll(':scope > td'));
             let nameCell = null;
@@ -422,12 +442,10 @@
                 if (!nameCell) { nameCell = td; continue; }
             }
 
-            // Tag cells
             if (nameCell) nameCell.setAttribute('data-df-role', 'name');
             if (badgeCell) badgeCell.setAttribute('data-df-role', 'badge');
             if (addressCell) {
                 addressCell.setAttribute('data-df-role', 'meta');
-                // Wrap the IP in a click-to-copy pill
                 const m = addressCell.textContent.match(/(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/);
                 if (m && !addressCell.querySelector('.df-ip-copy')) {
                     const ip = m[0];
@@ -452,13 +470,18 @@
                 }
             }
 
-            // Prepend monogram avatar cell
+            // Avatar cell — prefer egg icon, fall back to monogram
             if (nameCell && !tr.querySelector('td[data-df-role="avatar"]')) {
                 const avatarCell = document.createElement('td');
                 avatarCell.setAttribute('data-df-role', 'avatar');
                 const av = document.createElement('div');
                 av.className = 'df-avatar';
-                av.textContent = monogramOf(nameCell.textContent);
+                if (eggIcon) {
+                    av.classList.add('df-avatar-icon');
+                    av.style.backgroundImage = `url("${eggIcon}")`;
+                } else {
+                    av.textContent = monogramOf(nameCell.textContent);
+                }
                 avatarCell.appendChild(av);
                 tr.insertBefore(avatarCell, tr.firstChild);
             }
