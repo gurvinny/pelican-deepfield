@@ -264,11 +264,27 @@ main .flex.flex-wrap {
     gap: 1rem !important;
 }
 
-.fi-page-content > *,
-.fi-main-ctn > *,
+/* Vertical rhythm between adjacent widgets/sections — but NOT the sidebar or topbar */
+.fi-page-content > *:not(.fi-sidebar):not(.fi-topbar):not(:first-child),
+.fi-main-ctn > *:not(.fi-sidebar):not(.fi-topbar):not(:first-child),
 .fi-wi + .fi-wi,
 .fi-section + .fi-section {
     margin-top: 0.25rem;
+}
+
+/* Sidebar must sit flush to the top edge of the viewport */
+.fi-sidebar {
+    margin: 0 !important;
+    padding-top: 0 !important;
+    top: 0 !important;
+}
+.fi-sidebar-header {
+    margin-top: 0 !important;
+    padding-top: 0.75rem !important;
+}
+.fi-layout,
+.fi-main-ctn {
+    padding-top: 0 !important;
 }
 
 /* Server-console page specifically packs a stats widget on top of the console */
