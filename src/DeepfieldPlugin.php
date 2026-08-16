@@ -95,7 +95,55 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 
         return <<<HTML
 <meta name="df-settings" content="{$settings}">
-<script>(function(){try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}})();</script>
+<script>
+(function(){
+  try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}
+
+  /* Deepfield xterm.js palette shim
+     Pelican bakes the terminal palette into inline JS in server-console.blade.php
+     and renders via WebGL canvas, which CSS cannot color. We intercept
+     window.Xterm the moment Vite assigns it and monkey-patch the Terminal
+     constructor to merge our theme into every instance. */
+  var DF_XTERM = {
+    background: '#050614',
+    foreground: '#e8ecff',
+    cursor: '#38e1ff',
+    cursorAccent: '#050614',
+    selectionBackground: 'rgba(94, 234, 212, 0.35)',
+    selectionForeground: '#050614',
+    black: '#0b0a1e', red: '#f87171', green: '#5eead4', yellow: '#facc15',
+    blue: '#7c5cf0', magenta: '#f472b6', cyan: '#38e1ff', white: '#c8cff0',
+    brightBlack: '#5b608a', brightRed: '#fca5a5', brightGreen: '#a7f3d0',
+    brightYellow: '#fde68a', brightBlue: '#a78bfa', brightMagenta: '#fbcfe8',
+    brightCyan: '#7dd3fc', brightWhite: '#ffffff'
+  };
+  function patchXterm(x){
+    if(!x || !x.Terminal || x.__dfPatched) return;
+    var Orig = x.Terminal;
+    var Patched = function(opts){
+      opts = opts || {};
+      opts.theme = Object.assign({}, opts.theme, DF_XTERM);
+      opts.allowTransparency = true;
+      return new Orig(opts);
+    };
+    Patched.prototype = Orig.prototype;
+    try { Object.setPrototypeOf(Patched, Orig); } catch(e){}
+    x.Terminal = Patched;
+    x.__dfPatched = true;
+  }
+  if (window.Xterm) { patchXterm(window.Xterm); }
+  else {
+    var _x;
+    try {
+      Object.defineProperty(window, 'Xterm', {
+        configurable: true,
+        get: function(){ return _x; },
+        set: function(v){ _x = v; patchXterm(v); }
+      });
+    } catch(e){}
+  }
+})();
+</script>
 <link rel="preload" href="{$spaceGrotesk}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{$jetbrains}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{$orbitron}" as="font" type="font/woff2" crossorigin>

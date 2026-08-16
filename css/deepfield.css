@@ -425,43 +425,36 @@ a:hover, .fi-link:hover {
  * Server console — terminal-first, with optional CRT bloom
  * ============================================================= */
 
-/* Terminal container — Pelican + Filament + xterm.js */
-.fi-server-console,
-[class*="server-console"],
-[class*="console-terminal"],
-.xterm,
-.xterm-screen,
-div:has(> .xterm) {
-    background: #030410 !important;
+/* Terminal wrapper — Pelican uses <div id="terminal" wire:ignore>
+   xterm palette is set from JS (Pelican bakes theme into blade); our JS shim
+   overrides it. CSS here handles the wrapper + CRT scanline overlay. */
+#terminal {
+    background: transparent !important;
+    border: 1px solid var(--df-glass-border-strong);
     border-radius: var(--df-radius-lg);
-    font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+    padding: 0.5rem;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 0 40px rgba(56, 225, 255, 0.08), inset 0 0 60px rgba(11, 10, 30, 0.6);
 }
 
-/* xterm inner surfaces */
-.xterm-viewport,
-.xterm-screen,
-.xterm-rows {
+/* Ensure xterm's own DOM/canvas layers sit flush and transparent so #terminal bg shows */
+#terminal .xterm,
+#terminal .xterm-viewport,
+#terminal .xterm-screen {
     background: transparent !important;
-    color: #d4faff !important;
 }
 
-/* CRT bloom — glow text + scanlines when enabled */
-body[data-df-crt="1"] .xterm,
-body[data-df-crt="1"] .xterm-rows,
-body[data-df-crt="1"] .xterm-rows span,
-body[data-df-crt="1"] .fi-server-console,
-body[data-df-crt="1"] [class*="server-console"],
-body[data-df-crt="1"] [class*="console-terminal"] {
-    text-shadow: 0 0 3px currentColor, 0 0 6px rgba(94, 234, 212, 0.25);
+/* Command input strip under the terminal — align with our aesthetic */
+#send-command {
+    background: rgba(5, 6, 20, 0.6) !important;
+    color: var(--df-ink) !important;
+    font-family: 'JetBrains Mono', ui-monospace, monospace !important;
 }
+#send-command::placeholder { color: var(--df-ink-dim) !important; }
 
-body[data-df-crt="1"] .xterm::after,
-body[data-df-crt="1"] .fi-server-console::after,
-body[data-df-crt="1"] [class*="server-console"]::after,
-body[data-df-crt="1"] [class*="console-terminal"]::after,
-body[data-df-crt="1"] div:has(> .xterm)::after {
+/* CRT bloom — scanline overlay on wrapper (WebGL canvas can't get text-shadow) */
+body[data-df-crt="1"] #terminal::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -470,12 +463,24 @@ body[data-df-crt="1"] div:has(> .xterm)::after {
         to bottom,
         rgba(0, 0, 0, 0) 0px,
         rgba(0, 0, 0, 0) 2px,
-        rgba(94, 234, 212, 0.055) 3px,
+        rgba(94, 234, 212, 0.06) 3px,
         rgba(0, 0, 0, 0) 4px
     );
     mix-blend-mode: overlay;
     animation: df-scan 8s linear infinite;
     z-index: 5;
+    border-radius: var(--df-radius-lg);
+}
+
+/* Subtle vignette on the terminal edges for CRT curvature vibe */
+body[data-df-crt="1"] #terminal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.35) 100%);
+    z-index: 4;
+    border-radius: var(--df-radius-lg);
 }
 
 @keyframes df-scan {
