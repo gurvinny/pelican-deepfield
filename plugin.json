@@ -8,6 +8,5 @@
     "namespace": "Gurvinny\\Deepfield",
     "class": "DeepfieldPlugin",
     "panels": ["admin", "app", "server"],
-    "panel_version": "^1.0.0",
     "update_url": "https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/update.json"
 }
