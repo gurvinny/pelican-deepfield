@@ -282,9 +282,40 @@ main .flex.flex-wrap {
     margin-top: 0 !important;
     padding-top: 0.75rem !important;
 }
+
+/* Tighten the gap between topbar and page content across every page */
 .fi-layout,
-.fi-main-ctn {
+.fi-main-ctn,
+.fi-main {
     padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.fi-page {
+    padding-top: 0.5rem !important;
+    margin-top: 0 !important;
+}
+
+.fi-page-content,
+.fi-page-content-ctn {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Any first child inside main should sit close to the topbar */
+.fi-main > *:first-child,
+.fi-main-ctn > *:first-child,
+.fi-page > *:first-child,
+.fi-page-content > *:first-child {
+    margin-top: 0 !important;
+}
+
+/* Tighten the page-header banner padding so it doesn't visually double the gap */
+.fi-page-header,
+.fi-header {
+    padding: 0.85rem 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+    margin-top: 0 !important;
 }
 
 /* Server-console page specifically packs a stats widget on top of the console */
