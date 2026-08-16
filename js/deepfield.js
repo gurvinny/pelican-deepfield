@@ -367,86 +367,8 @@
     }
 
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); initServerCards(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);
-
-    // ------------------------------------------------------------------
-    // Server list — reflow table rows into rich tile cards
-    // Only runs when body[data-df-page="server-list"] is set (route-scoped).
-    // ------------------------------------------------------------------
-    let cardObs = null;
-    function initServerCards() {
-        if (document.body.getAttribute('data-df-page') !== 'server-list') {
-            if (cardObs) { cardObs.disconnect(); cardObs = null; }
-            return;
-        }
-        reflowCards();
-
-        // Watch the schema grid for Livewire re-renders that clobber our wrapping
-        const grid = document.querySelector('.fi-grid.fi-sc, main');
-        if (grid && !grid.__dfObserved) {
-            grid.__dfObserved = true;
-            if (cardObs) cardObs.disconnect();
-            cardObs = new MutationObserver(() => requestAnimationFrame(reflowCards));
-            cardObs.observe(grid, { childList: true, subtree: true });
-        }
-    }
-
-    // Pelican renders server cards as .relative.cursor-pointer inside a Filament
-    // schema grid. We: (1) stagger animation-delay via --df-idx, (2) wrap IP:port
-    // text with a click-to-copy pill without stealing the card's navigation click.
-    const IP_RE = /(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/;
-    const IP_RE_G = /(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/g;
-
-    function reflowCards() {
-        const cards = document.querySelectorAll('body[data-df-page="server-list"] .relative.cursor-pointer');
-        cards.forEach((card, idx) => {
-            if (card.__dfReflowed) return;
-            card.__dfReflowed = true;
-            card.style.setProperty('--df-idx', idx);
-
-            // Walk text nodes inside the card looking for an IP:port. When we find
-            // one, split the node and wrap the match in a stopPropagation pill.
-            const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, {
-                acceptNode: (n) => IP_RE.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
-            });
-            const textNodes = [];
-            let n; while ((n = walker.nextNode())) textNodes.push(n);
-
-            textNodes.forEach((tn) => {
-                if (tn.__dfWrapped) return;
-                const text = tn.nodeValue;
-                const m = text.match(IP_RE);
-                if (!m) return;
-                const ip = m[0];
-                const before = text.slice(0, m.index);
-                const after = text.slice(m.index + ip.length);
-                const parent = tn.parentNode;
-                if (!parent) return;
-
-                const pill = document.createElement('button');
-                pill.type = 'button';
-                pill.className = 'df-ip-copy';
-                pill.textContent = ip;
-                pill.addEventListener('click', (ev) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    try { navigator.clipboard && navigator.clipboard.writeText(ip); } catch (_) {}
-                    pill.classList.add('df-copied');
-                    const prev = pill.textContent;
-                    pill.textContent = 'Copied';
-                    setTimeout(() => { pill.textContent = prev; pill.classList.remove('df-copied'); }, 1400);
-                });
-
-                const frag = document.createDocumentFragment();
-                if (before) frag.appendChild(document.createTextNode(before));
-                frag.appendChild(pill);
-                if (after) frag.appendChild(document.createTextNode(after));
-                parent.replaceChild(frag, tn);
-                pill.__dfWrapped = true;
-            });
-        });
-    }
 })();

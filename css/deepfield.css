@@ -116,9 +116,21 @@ html { background: var(--df-bg-void) !important; }
 .fi-topbar          { z-index: 30 !important; position: sticky; }
 .fi-sidebar         { z-index: 40 !important; }
 
+/* Overlay must never trap clicks. Filament's default click-to-close is a
+   convenience; we prefer that dropdown/notification panels remain usable
+   over the ability to click empty space to close. Escape still closes. */
 .fi-modal-close-overlay {
     z-index: 9000 !important;
-    /* keep default pointer-events so Filament's click-to-close works */
+    pointer-events: none !important;
+}
+
+/* Anything that follows an overlay in the DOM (its sibling — usually the
+   panel or modal window itself) must sit above it. */
+.fi-modal-close-overlay ~ *,
+.fi-modal-close-overlay + *,
+[class*="modal-close-overlay"] ~ * {
+    z-index: 9500 !important;
+    pointer-events: auto !important;
 }
 
 .fi-modal,
@@ -974,146 +986,9 @@ body[data-df-auth="1"] .fi-simple-heading {
     z-index: 1;
 }
 
-/* =============================================================
- * Server list — Pelican renders cards via Filament schema, NOT a table.
- * Real structure:
- *   .fi-grid.fi-sc.fi-sc-has-gap        <-- grid container
- *     .fi-grid-col                       <-- one column per card
- *       .fi-sc-component
- *         .relative.cursor-pointer       <-- clickable card link
- *           .flex-1.rounded-lg.p-3.overflow-hidden   <-- visible card body
- * ============================================================= */
-
-@keyframes df-card-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Responsive card grid */
-body[data-df-page="server-list"] .fi-grid.fi-sc.fi-sc-has-gap {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
-    gap: 1rem !important;
-}
-
-/* Each card wrapper */
-body[data-df-page="server-list"] .fi-grid-col:has(.cursor-pointer),
-body[data-df-page="server-list"] .fi-grid-col:has(> div > .cursor-pointer),
-body[data-df-page="server-list"] .fi-grid-col:has(.relative.cursor-pointer) {
-    animation: df-card-in 420ms var(--df-ease-out) both;
-    animation-delay: calc(var(--df-idx, 0) * 65ms);
-}
-
-/* Visible card body — the Tailwind-classed div Pelican renders */
-body[data-df-page="server-list"] .relative.cursor-pointer .flex-1.rounded-lg,
-body[data-df-page="server-list"] .relative.cursor-pointer > .flex-1,
-body[data-df-page="server-list"] .cursor-pointer .rounded-lg.p-3 {
-    background: var(--df-glass-card) !important;
-    border: 1px solid var(--df-glass-border) !important;
-    border-radius: var(--df-radius-lg) !important;
-    padding: 1.1rem 1.25rem !important;
-    transition: transform 220ms var(--df-ease-out), border-color 220ms var(--df-ease-out), box-shadow 220ms var(--df-ease-out);
-    position: relative;
-    overflow: hidden;
-    color: var(--df-ink) !important;
-    min-height: 8rem;
-}
-
-/* Hover — lift + aurora glow */
-body[data-df-page="server-list"] .relative.cursor-pointer:hover .flex-1.rounded-lg,
-body[data-df-page="server-list"] .relative.cursor-pointer:hover > .flex-1,
-body[data-df-page="server-list"] .cursor-pointer:hover .rounded-lg.p-3 {
-    transform: translateY(-3px);
-    border-color: var(--df-glass-border-strong) !important;
-    box-shadow: 0 14px 40px -14px rgba(56, 225, 255, 0.30), 0 0 30px rgba(167, 139, 250, 0.20) !important;
-}
-
-/* Big Orbitron name — target any heading-ish text at the top of the card */
-body[data-df-page="server-list"] .cursor-pointer h1,
-body[data-df-page="server-list"] .cursor-pointer h2,
-body[data-df-page="server-list"] .cursor-pointer h3,
-body[data-df-page="server-list"] .cursor-pointer .fi-sc-text[class*="font"],
-body[data-df-page="server-list"] .cursor-pointer .fi-in-text:first-of-type,
-body[data-df-page="server-list"] .cursor-pointer [class*="text-lg"],
-body[data-df-page="server-list"] .cursor-pointer [class*="text-xl"] {
-    font-family: 'Orbitron', 'Space Grotesk', sans-serif !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em;
-    color: var(--df-ink) !important;
-    text-shadow: 0 0 12px rgba(94, 234, 212, 0.25);
-}
-
-/* Kill Tailwind dark:bg-gray-800 on the card so glass shows through */
-body[data-df-page="server-list"] .cursor-pointer .bg-gray-800,
-body[data-df-page="server-list"] .cursor-pointer .dark\:bg-gray-800 {
-    background: transparent !important;
-}
-
-/* Preserve Pelican's egg-icon banner but tune opacity for our aesthetic */
-body[data-df-page="server-list"] .cursor-pointer div[style*="/storage/icons/egg/"] {
-    opacity: 0.15 !important;
-    filter: drop-shadow(0 0 12px rgba(94, 234, 212, 0.15));
-    mask-image: linear-gradient(to left, black 0%, black 50%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to left, black 0%, black 50%, transparent 100%);
-}
-
-/* IP click-to-copy pill (JS wraps any IP:port text in the card) */
-.df-ip-copy {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    background: rgba(167, 139, 250, 0.10);
-    border: 1px solid var(--df-glass-border);
-    color: var(--df-ink-soft);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    cursor: pointer;
-    transition: background 160ms var(--df-ease-out), border-color 160ms, color 160ms, transform 100ms;
-    line-height: 1.2;
-}
-.df-ip-copy:hover {
-    background: var(--df-aurora-soft);
-    border-color: var(--df-cyan);
-    color: var(--df-ink);
-}
-.df-ip-copy:active { transform: scale(0.97); }
-.df-ip-copy::after {
-    content: '⧉';
-    opacity: 0.6;
-    font-size: 0.85em;
-    margin-left: 0.15rem;
-}
-.df-ip-copy.df-copied {
-    background: rgba(94, 234, 212, 0.18);
-    border-color: var(--df-teal);
-    color: var(--df-teal);
-}
-.df-ip-copy.df-copied::after { content: '✓'; opacity: 1; }
-
-/* State-aware ambient glow on Pelican's card wrapper */
-body[data-df-page="server-list"] .cursor-pointer:has(.fi-badge[class*="success"]) .flex-1.rounded-lg::after,
-body[data-df-page="server-list"] .cursor-pointer:has([data-status="running"]) .flex-1.rounded-lg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(90deg, rgba(52, 211, 153, 0.10), transparent 45%);
-    border-radius: inherit;
-    z-index: 0;
-}
-body[data-df-page="server-list"] .cursor-pointer:has(.fi-badge[class*="danger"]) .flex-1.rounded-lg::after,
-body[data-df-page="server-list"] .cursor-pointer:has([data-status="offline"]) .flex-1.rounded-lg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(90deg, rgba(248, 113, 113, 0.06), transparent 45%);
-    border-radius: inherit;
-    z-index: 0;
-    opacity: 0.7;
-}
+/* Server-list card customization was reverted per user request —
+   Pelican's default card look is used, only inheriting the theme's
+   global tokens (colors, fonts, focus rings, etc). */
 
 /* =============================================================
  * Loading skeletons — aurora shimmer
