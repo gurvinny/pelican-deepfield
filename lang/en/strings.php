@@ -36,4 +36,10 @@ return [
     'scan_fine'            => 'Fine',
     'scan_normal'          => 'Normal',
     'scan_heavy'           => 'Heavy',
+
+    'audio_cues'           => 'Audio cues on server state change',
+    'audio_cues_help'      => 'Play a short WebAudio tone when a server transitions to running / starting / offline. Off by default.',
+
+    'tab_title_suffix'     => 'Append " · Deepfield" to the browser tab title',
+    'tab_title_suffix_help'=> 'Purely cosmetic — makes browser tabs immediately identifiable when you have several panels open.',
 ];

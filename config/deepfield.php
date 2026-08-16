@@ -8,4 +8,6 @@ return [
     'reduce_motion'     => env('DEEPFIELD_REDUCE_MOTION', false),
     'terminal_palette'  => env('DEEPFIELD_TERMINAL_PALETTE', 'cosmic'),   // cosmic|minecraft|solarized_aurora|nord_aurora
     'scanline_density'  => env('DEEPFIELD_SCANLINE_DENSITY', 'normal'),   // fine|normal|heavy
+    'audio_cues'        => env('DEEPFIELD_AUDIO_CUES', false),            // opt-in server state audio
+    'tab_title_suffix'  => env('DEEPFIELD_TAB_TITLE_SUFFIX', true),       // append "· Deepfield"
 ];

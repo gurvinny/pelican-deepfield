@@ -7,11 +7,15 @@
 
     const state = {
         settings: {
-            star_density:   'medium',
-            nebula_enabled: true,
-            nebula_hue:     'violet',
-            crt_bloom:      true,
-            reduce_motion:  false,
+            star_density:      'medium',
+            nebula_enabled:    true,
+            nebula_hue:        'violet',
+            crt_bloom:         true,
+            reduce_motion:     false,
+            terminal_palette:  'cosmic',
+            scanline_density:  'normal',
+            audio_cues:        false,
+            tab_title_suffix:  true,
         },
         rafStar: null,
         rafNeb:  null,
@@ -292,4 +296,79 @@
     } else {
         start();
     }
+
+    // ------------------------------------------------------------------
+    // Tab title suffix — append "· Deepfield" if not present
+    // ------------------------------------------------------------------
+    function initTabTitle() {
+        if (!state.settings.tab_title_suffix) return;
+        const suffix = ' · Deepfield';
+        const apply = () => {
+            const t = document.title || '';
+            if (t && !t.endsWith(suffix)) document.title = t + suffix;
+        };
+        apply();
+        const titleEl = document.querySelector('title');
+        if (titleEl && !titleEl.__dfObserved) {
+            titleEl.__dfObserved = true;
+            new MutationObserver(apply).observe(titleEl, { childList: true });
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Audio cues on server-state change (opt-in, default off)
+    // Generates tones via WebAudio — no audio files shipped.
+    // ------------------------------------------------------------------
+    function initAudioCues() {
+        if (!state.settings.audio_cues) return;
+        let ctx;
+        const getCtx = () => (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)());
+        const tone = (freq, dur, type = 'sine', gain = 0.06) => {
+            try {
+                const c = getCtx();
+                const o = c.createOscillator();
+                const g = c.createGain();
+                o.type = type;
+                o.frequency.value = freq;
+                g.gain.value = 0;
+                o.connect(g).connect(c.destination);
+                const t = c.currentTime;
+                g.gain.linearRampToValueAtTime(gain, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                o.start(t);
+                o.stop(t + dur);
+            } catch (e) {}
+        };
+        const SOUNDS = {
+            running:  () => { tone(440, 0.15); setTimeout(() => tone(660, 0.18), 90); setTimeout(() => tone(880, 0.25), 200); },
+            starting: () => { tone(520, 0.12, 'triangle', 0.05); },
+            offline:  () => { tone(300, 0.18, 'sawtooth', 0.05); setTimeout(() => tone(220, 0.22, 'sawtooth', 0.05), 120); },
+        };
+        // Watch state badge mutations
+        const seen = new WeakMap();
+        const onMut = (mutations) => {
+            for (const m of mutations) {
+                const target = m.target;
+                if (!target || !target.textContent) continue;
+                const txt = target.textContent.trim().toLowerCase();
+                const key = ['running', 'online', 'starting', 'stopping', 'offline'].find(k => txt.includes(k));
+                if (!key) continue;
+                const prev = seen.get(target);
+                if (prev === key) continue;
+                seen.set(target, key);
+                if (prev == null) continue;   // skip first observation
+                const map = { online: 'running', running: 'running', starting: 'starting', stopping: 'offline', offline: 'offline' };
+                (SOUNDS[map[key]] || (() => {}))();
+            }
+        };
+        const badges = document.querySelectorAll('.fi-badge, [class*="badge"]');
+        const obs = new MutationObserver(onMut);
+        badges.forEach(b => obs.observe(b, { childList: true, characterData: true, subtree: true }));
+    }
+
+    // Wire up once on first ready + reinit on navigation
+    const initExtras = () => { initTabTitle(); initAudioCues(); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
+    else initExtras();
+    document.addEventListener('livewire:navigated', initExtras);
 })();

@@ -243,8 +243,8 @@ main.fi-main {
     -webkit-backdrop-filter: blur(6px);
 }
 
-/* ---- Grid spacing — Filament collapses gap to 0 when overridden;
-       restore breathing room between stats/widgets/sections. */
+/* ---- Grid spacing — Filament packs everything with zero gap by default.
+       Restore breathing room across every layout container the panel uses. */
 .fi-page-content,
 .fi-page-content-ctn,
 .fi-main-ctn,
@@ -252,7 +252,15 @@ main.fi-main {
 .fi-widgets,
 .fi-wi-stats-overview,
 .fi-wi-stats-overview-stats-ctn,
-main .grid {
+.fi-in,
+.fi-in-ctn,
+.fi-fo-component-ctn,
+.fi-section-content,
+.fi-section-content > .grid,
+.fi-in > .grid,
+.fi-in-ctn > .grid,
+main .grid,
+main .flex.flex-wrap {
     gap: 1rem !important;
 }
 
@@ -268,6 +276,33 @@ main .grid {
 [class*="server-details"],
 .fi-page.fi-resource-page .fi-page-content {
     gap: 1rem !important;
+}
+
+/* ---- Button group — Filament intentionally attaches Start|Restart|Stop
+       into one segmented pill; break them into individual glowing pills for our aesthetic. */
+.fi-btn-group,
+.fi-ac-btn-group,
+[class*="btn-group"] {
+    display: inline-flex !important;
+    gap: 0.5rem !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+.fi-btn-group > .fi-btn,
+.fi-ac-btn-group > .fi-btn,
+[class*="btn-group"] > .fi-btn {
+    border-radius: var(--df-radius-md) !important;
+    border-top-left-radius: var(--df-radius-md) !important;
+    border-top-right-radius: var(--df-radius-md) !important;
+    border-bottom-left-radius: var(--df-radius-md) !important;
+    border-bottom-right-radius: var(--df-radius-md) !important;
+    border-left-width: 1px !important;
+    border-right-width: 1px !important;
+    margin: 0 !important;
 }
 
 .fi-section-header,
@@ -657,3 +692,334 @@ body[data-df-crt="1"] #terminal::before {
     outline: 2px solid var(--df-cyan);
     outline-offset: 2px;
 }
+
+/* =============================================================
+ * Auth / login / password-reset hero (Filament .fi-simple-page)
+ * ============================================================= */
+
+/* Scope: only on real auth routes (login/register/reset). Filament also uses
+   .fi-simple-page for some wizard flows — we exclude those by requiring the
+   body to have a `fi-panel-auth` class or the URL to be an auth route via
+   an explicit body attribute set from the head-hook JS. */
+body[data-df-auth="1"] .fi-simple-page,
+body[data-df-auth="1"] .fi-simple-layout {
+    background: transparent !important;
+    min-height: 100vh;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    position: relative;
+}
+
+/* Left half — cosmic hero panel */
+body[data-df-auth="1"] .fi-simple-page::before {
+    content: 'DEEPFIELD';
+    display: none;
+    position: relative;
+    flex: 1 1 50%;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: transparent;
+    background: var(--df-aurora);
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: 0 0 40px rgba(94, 234, 212, 0.35);
+    border-right: 1px solid var(--df-glass-border);
+}
+
+@media (min-width: 900px) {
+    body[data-df-auth="1"] .fi-simple-page::before { display: flex !important; }
+}
+
+/* Right half — form card */
+body[data-df-auth="1"] .fi-simple-page > *,
+body[data-df-auth="1"] .fi-simple-main {
+    flex: 1 1 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2rem !important;
+    max-width: 100% !important;
+    width: auto !important;
+}
+
+body[data-df-auth="1"] .fi-simple-main-ctn,
+body[data-df-auth="1"] .fi-simple-main > * {
+    width: 100% !important;
+    max-width: 26rem !important;
+    background: var(--df-glass-card) !important;
+    border: 1px solid var(--df-glass-border-strong) !important;
+    border-radius: var(--df-radius-lg) !important;
+    padding: 2rem !important;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.65), 0 0 40px rgba(94, 234, 212, 0.10);
+    backdrop-filter: blur(14px);
+}
+
+body[data-df-auth="1"] .fi-simple-header,
+body[data-df-auth="1"] .fi-simple-heading {
+    font-family: 'Orbitron', sans-serif !important;
+    letter-spacing: 0.03em;
+    text-shadow: var(--df-glow-h1);
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* =============================================================
+ * Defensive: keep all navigation always clickable — nothing our
+ * theme adds should sit above tabs, sidebar nav, or topbar links.
+ * ============================================================= */
+.fi-tabs,
+.fi-tabs-item,
+.fi-tabs-item a,
+.fi-sidebar-item,
+.fi-sidebar-item a,
+.fi-topbar,
+.fi-topbar a,
+.fi-topbar button,
+.fi-user-menu,
+.fi-dropdown-panel a,
+.fi-breadcrumbs a {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 5;
+}
+
+/* Tab bar (Profile → Admin/API/Sessions) — theme + ensure top-layer */
+.fi-tabs {
+    background: transparent !important;
+    border-bottom: 1px solid var(--df-glass-border);
+    padding-bottom: 0;
+    margin-bottom: 1rem;
+}
+.fi-tabs-item {
+    color: var(--df-ink-muted) !important;
+    padding: 0.5rem 1rem !important;
+    border-bottom: 2px solid transparent !important;
+    transition: color 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
+    background: transparent !important;
+}
+.fi-tabs-item:hover {
+    color: var(--df-ink) !important;
+    border-bottom-color: var(--df-glass-border-strong) !important;
+}
+.fi-tabs-item[aria-selected="true"],
+.fi-tabs-item.fi-active {
+    color: var(--df-cyan) !important;
+    border-bottom-color: var(--df-cyan) !important;
+    text-shadow: 0 0 8px rgba(56, 225, 255, 0.4);
+}
+
+/* =============================================================
+ * Profile / user banner — restrained gradient bg + Orbitron name
+ * ============================================================= */
+.fi-page-header,
+.fi-header,
+[class*="user-header"],
+[class*="profile-header"] {
+    background: linear-gradient(120deg,
+        rgba(11, 10, 30, 0.85),
+        rgba(18, 17, 42, 0.85) 60%,
+        rgba(11, 10, 30, 0.85)) !important;
+    border: 1px solid var(--df-glass-border);
+    border-radius: var(--df-radius-lg);
+    padding: 1.25rem 1.5rem !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-page-header::after,
+[class*="user-header"]::after,
+[class*="profile-header"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--df-aurora-soft);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.fi-page-header > *,
+[class*="user-header"] > *,
+[class*="profile-header"] > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* =============================================================
+ * Server list — restyle table rows into cards
+ * ============================================================= */
+
+/* Only on server-list route */
+.fi-resource-list-records-page .fi-ta-table,
+[data-df-page="server-list"] .fi-ta-table {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.fi-resource-list-records-page .fi-ta-header,
+[data-df-page="server-list"] .fi-ta-header {
+    display: none !important;
+}
+
+.fi-resource-list-records-page .fi-ta-table tbody,
+[data-df-page="server-list"] .fi-ta-table tbody {
+    display: grid !important;
+    gap: 0.75rem !important;
+    background: transparent !important;
+}
+
+.fi-resource-list-records-page .fi-ta-table tbody tr,
+[data-df-page="server-list"] .fi-ta-table tbody tr {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.4fr) auto auto auto !important;
+    align-items: center !important;
+    gap: 1rem;
+    background: var(--df-glass-card) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-lg) !important;
+    padding: 0.9rem 1.1rem !important;
+    transition: transform 200ms var(--df-ease-out), box-shadow 200ms var(--df-ease-out), border-color 200ms var(--df-ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-resource-list-records-page .fi-ta-table tbody tr:hover,
+[data-df-page="server-list"] .fi-ta-table tbody tr:hover {
+    transform: translateY(-2px);
+    border-color: var(--df-glass-border-strong);
+    box-shadow: 0 12px 40px -12px rgba(56, 225, 255, 0.25), 0 0 30px rgba(167, 139, 250, 0.15);
+}
+
+.fi-resource-list-records-page .fi-ta-table tbody tr td,
+[data-df-page="server-list"] .fi-ta-table tbody tr td {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+/* State-aware ambient glow on the row */
+tr:has(.fi-badge[class*="success"])::after,
+tr:has([data-status="running"])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.08), transparent 40%);
+    border-radius: inherit;
+}
+tr:has(.fi-badge[class*="danger"])::after,
+tr:has([data-status="offline"])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(248, 113, 113, 0.05), transparent 40%);
+    border-radius: inherit;
+    opacity: 0.7;
+    filter: grayscale(0.15);
+}
+
+/* =============================================================
+ * Loading skeletons — aurora shimmer
+ * ============================================================= */
+
+.fi-skeleton,
+[class*="skeleton"],
+[class*="animate-pulse"] > * {
+    background: linear-gradient(
+        90deg,
+        rgba(167, 139, 250, 0.08) 0%,
+        rgba(94, 234, 212, 0.18) 50%,
+        rgba(167, 139, 250, 0.08) 100%
+    ) !important;
+    background-size: 200% 100% !important;
+    animation: df-shimmer 1.8s linear infinite !important;
+    border-radius: var(--df-radius-sm);
+}
+
+@keyframes df-shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* =============================================================
+ * Empty states
+ * ============================================================= */
+
+.fi-ta-empty-state,
+.fi-wi-empty,
+[class*="empty-state"] {
+    padding: 3rem 1.5rem !important;
+    text-align: center;
+    background: transparent !important;
+    border: 1px dashed var(--df-glass-border) !important;
+    border-radius: var(--df-radius-lg);
+}
+
+.fi-ta-empty-state-heading,
+[class*="empty-state"] h2,
+[class*="empty-state"] h3 {
+    font-family: 'Orbitron', sans-serif !important;
+    letter-spacing: 0.04em;
+    color: var(--df-ink);
+    text-shadow: 0 0 16px rgba(94, 234, 212, 0.3);
+    margin-top: 1rem;
+}
+
+.fi-ta-empty-state-description,
+[class*="empty-state"] p {
+    color: var(--df-ink-muted) !important;
+    max-width: 32rem;
+    margin: 0.5rem auto 0;
+}
+
+.fi-ta-empty-state-icon-ctn::before,
+[class*="empty-state"] > svg:first-child {
+    color: var(--df-violet) !important;
+    filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.5));
+}
+
+/* =============================================================
+ * Button loading — cyan orbit ring
+ * ============================================================= */
+
+.fi-btn[wire\\:loading],
+.fi-btn.fi-btn-loading,
+button[wire\\:loading] {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+    background-image: none !important;
+    background-color: rgba(11, 10, 30, 0.85) !important;
+}
+
+.fi-btn[wire\\:loading]::after,
+.fi-btn.fi-btn-loading::after,
+button[wire\\:loading]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--df-cyan);
+    border-right-color: var(--df-teal);
+    animation: df-orbit 700ms linear infinite;
+    box-shadow: 0 0 12px rgba(56, 225, 255, 0.55);
+}
+
+@keyframes df-orbit {
+    to { transform: rotate(360deg); }
+}
+
+/* Filament's default spinner icon inside buttons — kill it so our ring is the only one */
+.fi-btn .fi-icon-btn-loading-indicator,
+.fi-btn svg.animate-spin { display: none !important; }

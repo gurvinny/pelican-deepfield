@@ -84,6 +84,8 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
             'reduce_motion'    => (bool) config('deepfield.reduce_motion', false),
             'terminal_palette' => config('deepfield.terminal_palette', 'cosmic'),
             'scanline_density' => config('deepfield.scanline_density', 'normal'),
+            'audio_cues'       => (bool) config('deepfield.audio_cues', false),
+            'tab_title_suffix' => (bool) config('deepfield.tab_title_suffix', true),
         ];
     }
 
@@ -95,11 +97,38 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         $jetbrains    = asset('plugins/deepfield/fonts/JetBrainsMono-Variable.woff2');
         $orbitron     = asset('plugins/deepfield/fonts/Orbitron-Variable.woff2');
 
+        // SVG favicon — aurora gradient orbit
+        $favicon = 'data:image/svg+xml;utf8,' . rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+            .'<defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1">'
+            .'<stop offset="0" stop-color="%2338e1ff"/>'
+            .'<stop offset="0.5" stop-color="%235eead4"/>'
+            .'<stop offset="1" stop-color="%23a78bfa"/>'
+            .'</linearGradient></defs>'
+            .'<rect width="64" height="64" rx="14" fill="%23050614"/>'
+            .'<circle cx="32" cy="32" r="18" fill="none" stroke="url(%23a)" stroke-width="3"/>'
+            .'<circle cx="32" cy="32" r="4" fill="url(%23a)"/>'
+            .'</svg>'
+        );
+
         return <<<HTML
 <meta name="df-settings" content="{$settings}">
+<link rel="icon" type="image/svg+xml" href="{$favicon}">
 <script>
 (function(){
   try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}
+  /* Mark auth routes so the auth-hero CSS only applies there.
+     Body doesn't exist yet at head-time, so defer to DOMContentLoaded. */
+  function markAuth(){
+    try{
+      var p = location.pathname.toLowerCase();
+      if (/\/login|\/register|\/password|\/reset|\/verify|\/two-factor/.test(p)) {
+        document.body.setAttribute('data-df-auth','1');
+      }
+    }catch(e){}
+  }
+  if (document.body) markAuth();
+  else document.addEventListener('DOMContentLoaded', markAuth);
 
   /* ---------- Palette catalogue ---------- */
   var PAL = {
@@ -342,6 +371,16 @@ HTML;
                 ])
                 ->native(false)
                 ->required(),
+
+            Toggle::make('audio_cues')
+                ->label(trans('deepfield::strings.audio_cues'))
+                ->helperText(trans('deepfield::strings.audio_cues_help'))
+                ->inline(false),
+
+            Toggle::make('tab_title_suffix')
+                ->label(trans('deepfield::strings.tab_title_suffix'))
+                ->helperText(trans('deepfield::strings.tab_title_suffix_help'))
+                ->inline(false),
         ];
     }
 
@@ -360,6 +399,8 @@ HTML;
             'DEEPFIELD_REDUCE_MOTION'     => ($data['reduce_motion'] ?? false) ? 'true' : 'false',
             'DEEPFIELD_TERMINAL_PALETTE'  => $data['terminal_palette'] ?? 'cosmic',
             'DEEPFIELD_SCANLINE_DENSITY'  => $data['scanline_density'] ?? 'normal',
+            'DEEPFIELD_AUDIO_CUES'        => ($data['audio_cues'] ?? false) ? 'true' : 'false',
+            'DEEPFIELD_TAB_TITLE_SUFFIX'  => ($data['tab_title_suffix'] ?? true) ? 'true' : 'false',
         ]);
 
         Notification::make()
