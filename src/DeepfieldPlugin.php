@@ -117,18 +117,31 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 <script>
 (function(){
   try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}
-  /* Mark auth routes so the auth-hero CSS only applies there.
-     Body doesn't exist yet at head-time, so defer to DOMContentLoaded. */
-  function markAuth(){
+  /* Route markers — set body attributes so route-specific CSS only applies where it should.
+     Body doesn't exist yet at head-time, so defer to DOMContentLoaded, and re-run on Livewire nav. */
+  function markRoute(){
     try{
-      var p = location.pathname.toLowerCase();
+      if (!document.body) return;
+      var p = location.pathname.toLowerCase().replace(/\/+$/,'') || '/';
+
+      /* Auth routes */
       if (/\/login|\/register|\/password|\/reset|\/verify|\/two-factor/.test(p)) {
         document.body.setAttribute('data-df-auth','1');
+      } else {
+        document.body.removeAttribute('data-df-auth');
+      }
+
+      /* Server list — Pelican app-panel root (typically "/" or "/servers") */
+      if (p === '/' || p === '/servers' || p === '/app' || p === '/app/servers') {
+        document.body.setAttribute('data-df-page','server-list');
+      } else {
+        document.body.removeAttribute('data-df-page');
       }
     }catch(e){}
   }
-  if (document.body) markAuth();
-  else document.addEventListener('DOMContentLoaded', markAuth);
+  if (document.body) markRoute();
+  else document.addEventListener('DOMContentLoaded', markRoute);
+  document.addEventListener('livewire:navigated', markRoute);
 
   /* ---------- Palette catalogue ---------- */
   var PAL = {

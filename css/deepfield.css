@@ -83,24 +83,49 @@
     --df-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---- Canvas backdrop layers ---------------------------------- */
+/* ---- Canvas backdrop layers ----------------------------------
+   Put the cosmic background on <html> so <body> can stay transparent
+   and the canvases can layer at z-index 0/1 without covering anything. */
+html { background: var(--df-bg-void) !important; }
+
 #df-nebula,
 #df-starfield {
-    position: fixed;
+    position: fixed !important;
     inset: 0;
     width: 100vw;
     height: 100vh;
-    pointer-events: none;
+    pointer-events: none !important;
     z-index: 0;
 }
 
 #df-nebula    { z-index: 0; opacity: 0.55; }
 #df-starfield { z-index: 1; }
 
-/* Panel content sits above the canvas */
-body > *:not(#df-nebula):not(#df-starfield) {
+/* Only the primary layout wrappers get lifted — dropdowns / modals /
+   notifications portal directly to <body> and MUST NOT be reparented into
+   this stacking context, or they'll appear below the topbar or become
+   unclickable. */
+.fi-layout,
+.fi-simple-layout {
     position: relative;
     z-index: 2;
+}
+
+/* Ensure floating/portaled layers sit above everything */
+.fi-topbar          { z-index: 30 !important; position: sticky; }
+.fi-sidebar         { z-index: 40 !important; }
+.fi-dropdown-panel,
+.fi-modal,
+.fi-modal-window,
+.fi-slide-over,
+.fi-slide-over-window,
+.fi-modal-close-overlay,
+.fi-notifications,
+.fi-user-menu,
+[x-teleport],
+[data-floating-ui-portal] {
+    z-index: 9999 !important;
+    pointer-events: auto !important;
 }
 
 /* ---- Body / typography reset --------------------------------- */
@@ -902,27 +927,23 @@ body[data-df-auth="1"] .fi-simple-heading {
  * ============================================================= */
 
 /* Only on server-list route */
-.fi-resource-list-records-page .fi-ta-table,
-[data-df-page="server-list"] .fi-ta-table {
+body[data-df-page="server-list"] .fi-ta-table {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
 
-.fi-resource-list-records-page .fi-ta-header,
-[data-df-page="server-list"] .fi-ta-header {
+body[data-df-page="server-list"] .fi-ta-header {
     display: none !important;
 }
 
-.fi-resource-list-records-page .fi-ta-table tbody,
-[data-df-page="server-list"] .fi-ta-table tbody {
+body[data-df-page="server-list"] .fi-ta-table tbody {
     display: grid !important;
     gap: 0.75rem !important;
     background: transparent !important;
 }
 
-.fi-resource-list-records-page .fi-ta-table tbody tr,
-[data-df-page="server-list"] .fi-ta-table tbody tr {
+body[data-df-page="server-list"] .fi-ta-table tbody tr {
     display: grid !important;
     grid-template-columns: minmax(0, 1.4fr) auto auto auto !important;
     align-items: center !important;
@@ -936,23 +957,21 @@ body[data-df-auth="1"] .fi-simple-heading {
     overflow: hidden;
 }
 
-.fi-resource-list-records-page .fi-ta-table tbody tr:hover,
-[data-df-page="server-list"] .fi-ta-table tbody tr:hover {
+body[data-df-page="server-list"] .fi-ta-table tbody tr:hover {
     transform: translateY(-2px);
     border-color: var(--df-glass-border-strong);
     box-shadow: 0 12px 40px -12px rgba(56, 225, 255, 0.25), 0 0 30px rgba(167, 139, 250, 0.15);
 }
 
-.fi-resource-list-records-page .fi-ta-table tbody tr td,
-[data-df-page="server-list"] .fi-ta-table tbody tr td {
+body[data-df-page="server-list"] .fi-ta-table tbody tr td {
     border: none !important;
     padding: 0 !important;
     background: transparent !important;
 }
 
-/* State-aware ambient glow on the row */
-tr:has(.fi-badge[class*="success"])::after,
-tr:has([data-status="running"])::after {
+/* State-aware ambient glow — scoped to server-list only */
+body[data-df-page="server-list"] tr:has(.fi-badge[class*="success"])::after,
+body[data-df-page="server-list"] tr:has([data-status="running"])::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -960,8 +979,8 @@ tr:has([data-status="running"])::after {
     background: linear-gradient(90deg, rgba(52, 211, 153, 0.08), transparent 40%);
     border-radius: inherit;
 }
-tr:has(.fi-badge[class*="danger"])::after,
-tr:has([data-status="offline"])::after {
+body[data-df-page="server-list"] tr:has(.fi-badge[class*="danger"])::after,
+body[data-df-page="server-list"] tr:has([data-status="offline"])::after {
     content: '';
     position: absolute;
     inset: 0;
