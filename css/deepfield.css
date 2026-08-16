@@ -431,18 +431,37 @@ tbody.fi-ta-body tr:hover {
     backdrop-filter: blur(4px);
 }
 
-/* ---- Inputs -------------------------------------------------- */
+/* ---- Inputs ---------------------------------------------------
+   Apply chrome (bg/border/radius) to the WRAPPER so the icon-prefix
+   lives inside the styled box. The input itself stays transparent. */
+.fi-input-wrp,
+.fi-select-input-wrp {
+    background: rgba(5, 6, 20, 0.6) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-md) !important;
+    transition: box-shadow 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
+    overflow: hidden;
+}
+
 .fi-input,
 .fi-select-input,
 .fi-textarea,
 input.fi-input,
 select.fi-select-input,
 textarea.fi-textarea {
-    background: rgba(5, 6, 20, 0.6) !important;
+    background: transparent !important;
     color: var(--df-ink) !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Standalone textareas / inputs without a wrapper still need chrome */
+textarea.fi-textarea:not(.fi-input-wrp textarea),
+.fi-textarea:not(.fi-input-wrp *) {
+    background: rgba(5, 6, 20, 0.6) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-md) !important;
-    transition: box-shadow 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
 }
 
 .fi-input::placeholder,
@@ -450,14 +469,29 @@ textarea.fi-textarea {
     color: var(--df-ink-dim) !important;
 }
 
+/* Icon prefix / suffix inside input wrappers */
+.fi-input-wrp-icon,
+.fi-input-wrp-prefix,
+.fi-input-wrp-suffix,
+.fi-input-wrp > svg {
+    background: transparent !important;
+    color: var(--df-ink-muted) !important;
+    border: none !important;
+}
+
+/* Focus state — on the wrapper only */
 .fi-input-wrp:focus-within,
-.fi-input:focus,
-.fi-select-input:focus,
-.fi-textarea:focus,
-:focus-visible {
+.fi-select-input-wrp:focus-within {
     outline: none !important;
     border-color: var(--df-cyan) !important;
     box-shadow: var(--df-glow-focus) !important;
+}
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 /* ---- Buttons ------------------------------------------------- */
@@ -937,51 +971,205 @@ body[data-df-auth="1"] .fi-simple-heading {
 }
 
 /* =============================================================
- * Server list — restyle table rows into cards
+ * Server list — rich tile cards (2–3 per row)
+ * JS reflow tags cells with data-df-role; CSS lays them out via grid areas.
  * ============================================================= */
 
-/* Only on server-list route */
-body[data-df-page="server-list"] .fi-ta-table {
+body[data-df-page="server-list"] .fi-ta-table,
+body[data-df-page="server-list"] .fi-ta-ctn {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    padding: 0 !important;
 }
 
-body[data-df-page="server-list"] .fi-ta-header {
+body[data-df-page="server-list"] .fi-ta-header,
+body[data-df-page="server-list"] thead {
     display: none !important;
+}
+
+/* Break table semantics so tbody can be a grid */
+body[data-df-page="server-list"] .fi-ta-table,
+body[data-df-page="server-list"] .fi-ta-table > *,
+body[data-df-page="server-list"] table {
+    display: block !important;
 }
 
 body[data-df-page="server-list"] .fi-ta-table tbody {
     display: grid !important;
-    gap: 0.75rem !important;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
+    gap: 1rem !important;
     background: transparent !important;
+    padding: 0 !important;
 }
 
+/* Each row = card */
 body[data-df-page="server-list"] .fi-ta-table tbody tr {
     display: grid !important;
-    grid-template-columns: minmax(0, 1.4fr) auto auto auto !important;
-    align-items: center !important;
-    gap: 1rem;
+    grid-template-columns: 3.25rem 1fr !important;
+    grid-template-areas:
+        "avatar name"
+        "avatar meta"
+        "content content"
+        "actions actions" !important;
+    gap: 0.6rem 1rem !important;
     background: var(--df-glass-card) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-lg) !important;
-    padding: 0.9rem 1.1rem !important;
-    transition: transform 200ms var(--df-ease-out), box-shadow 200ms var(--df-ease-out), border-color 200ms var(--df-ease-out);
+    padding: 1.1rem 1.25rem !important;
     position: relative;
     overflow: hidden;
+    transition: transform 220ms var(--df-ease-out), border-color 220ms var(--df-ease-out), box-shadow 220ms var(--df-ease-out);
+
+    animation: df-card-in 420ms var(--df-ease-out) both;
+    animation-delay: calc(var(--df-idx, 0) * 65ms);
 }
 
 body[data-df-page="server-list"] .fi-ta-table tbody tr:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     border-color: var(--df-glass-border-strong);
-    box-shadow: 0 12px 40px -12px rgba(56, 225, 255, 0.25), 0 0 30px rgba(167, 139, 250, 0.15);
+    box-shadow: 0 14px 40px -14px rgba(56, 225, 255, 0.28), 0 0 30px rgba(167, 139, 250, 0.16);
 }
 
+@keyframes df-card-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Zero out default cell chrome, then position tagged cells */
 body[data-df-page="server-list"] .fi-ta-table tbody tr td {
-    border: none !important;
     padding: 0 !important;
+    border: none !important;
     background: transparent !important;
 }
+
+/* Hide any cell we didn't recognize (JS didn't tag it) */
+body[data-df-page="server-list"] .fi-ta-table tbody tr td:not([data-df-role]) {
+    display: none !important;
+}
+
+/* Monogram avatar cell */
+body[data-df-page="server-list"] td[data-df-role="avatar"] {
+    display: flex !important;
+    grid-area: avatar;
+    align-items: center;
+    justify-content: center;
+}
+
+.df-avatar {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: var(--df-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    background: var(--df-aurora);
+    color: #060614;
+    box-shadow: 0 0 22px rgba(94, 234, 212, 0.28), inset 0 0 12px rgba(255, 255, 255, 0.15);
+    text-shadow: none;
+    flex-shrink: 0;
+}
+
+/* Name — biggest, Orbitron */
+body[data-df-page="server-list"] td[data-df-role="name"] {
+    display: flex !important;
+    grid-area: name;
+    align-items: flex-end;
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em;
+    color: var(--df-ink) !important;
+    text-shadow: 0 0 12px rgba(94, 234, 212, 0.25);
+    min-height: 1.5rem;
+}
+
+body[data-df-page="server-list"] td[data-df-role="name"] a,
+body[data-df-page="server-list"] td[data-df-role="name"] * {
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    letter-spacing: inherit !important;
+    text-decoration: none !important;
+}
+
+/* Meta row — status pill + address, secondary */
+body[data-df-page="server-list"] td[data-df-role="meta"] {
+    display: flex !important;
+    grid-area: meta;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    color: var(--df-ink-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+}
+
+/* Any status badge floats into meta row */
+body[data-df-page="server-list"] td[data-df-role="badge"] {
+    display: inline-flex !important;
+    align-items: center;
+    grid-area: meta;
+    align-self: start;
+    justify-self: end;
+    padding: 0 !important;
+}
+
+/* Content slot reserved for future live CPU/RAM/DISK bars (v1.2) */
+body[data-df-page="server-list"] td[data-df-role="content"] {
+    display: block !important;
+    grid-area: content;
+}
+
+/* Actions row */
+body[data-df-page="server-list"] td[data-df-role="actions"] {
+    display: flex !important;
+    grid-area: actions;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* IP click-to-copy pill (injected by JS) */
+.df-ip-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(167, 139, 250, 0.10);
+    border: 1px solid var(--df-glass-border);
+    color: var(--df-ink-soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 160ms var(--df-ease-out), border-color 160ms, color 160ms, transform 100ms;
+    line-height: 1.2;
+}
+.df-ip-copy:hover {
+    background: var(--df-aurora-soft);
+    border-color: var(--df-cyan);
+    color: var(--df-ink);
+}
+.df-ip-copy:active { transform: scale(0.97); }
+.df-ip-copy::after {
+    content: '⧉';
+    opacity: 0.6;
+    font-size: 0.85em;
+    margin-left: 0.15rem;
+}
+.df-ip-copy.df-copied {
+    background: rgba(94, 234, 212, 0.18);
+    border-color: var(--df-teal);
+    color: var(--df-teal);
+}
+.df-ip-copy.df-copied::after { content: '✓'; opacity: 1; }
 
 /* State-aware ambient glow — scoped to server-list only */
 body[data-df-page="server-list"] tr:has(.fi-badge[class*="success"])::after,

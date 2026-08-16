@@ -367,8 +367,101 @@
     }
 
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); initServerCards(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);
+
+    // ------------------------------------------------------------------
+    // Server list — reflow table rows into rich tile cards
+    // Only runs when body[data-df-page="server-list"] is set (route-scoped).
+    // ------------------------------------------------------------------
+    let cardObs = null;
+    function initServerCards() {
+        if (document.body.getAttribute('data-df-page') !== 'server-list') {
+            if (cardObs) { cardObs.disconnect(); cardObs = null; }
+            return;
+        }
+        reflowCards();
+
+        // Watch tbody for Livewire re-renders that clobber our injected DOM
+        const tbody = document.querySelector('.fi-ta-table tbody');
+        if (tbody && !tbody.__dfObserved) {
+            tbody.__dfObserved = true;
+            if (cardObs) cardObs.disconnect();
+            cardObs = new MutationObserver(() => requestAnimationFrame(reflowCards));
+            cardObs.observe(tbody, { childList: true, subtree: false });
+        }
+    }
+
+    function monogramOf(name) {
+        const clean = (name || '').trim();
+        if (!clean) return '·';
+        const parts = clean.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function reflowCards() {
+        const rows = document.querySelectorAll('body[data-df-page="server-list"] .fi-ta-table tbody tr');
+        rows.forEach((tr, idx) => {
+            if (tr.__dfReflowed) return;
+            tr.__dfReflowed = true;
+            tr.style.setProperty('--df-idx', idx);
+
+            const cells = Array.from(tr.querySelectorAll(':scope > td'));
+            let nameCell = null;
+            let addressCell = null;
+            let badgeCell = null;
+
+            for (const td of cells) {
+                const text = td.textContent.trim();
+                if (!text) continue;
+                if (td.querySelector('.fi-badge')) { badgeCell = badgeCell || td; continue; }
+                if (/(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/.test(text)) { addressCell = addressCell || td; continue; }
+                if (!nameCell) { nameCell = td; continue; }
+            }
+
+            // Tag cells
+            if (nameCell) nameCell.setAttribute('data-df-role', 'name');
+            if (badgeCell) badgeCell.setAttribute('data-df-role', 'badge');
+            if (addressCell) {
+                addressCell.setAttribute('data-df-role', 'meta');
+                // Wrap the IP in a click-to-copy pill
+                const m = addressCell.textContent.match(/(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/);
+                if (m && !addressCell.querySelector('.df-ip-copy')) {
+                    const ip = m[0];
+                    addressCell.innerHTML = '';
+                    const pill = document.createElement('button');
+                    pill.type = 'button';
+                    pill.className = 'df-ip-copy';
+                    pill.textContent = ip;
+                    pill.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        try { navigator.clipboard && navigator.clipboard.writeText(ip); } catch (_) {}
+                        pill.classList.add('df-copied');
+                        const prev = pill.textContent;
+                        pill.textContent = 'Copied';
+                        setTimeout(() => {
+                            pill.textContent = prev;
+                            pill.classList.remove('df-copied');
+                        }, 1400);
+                    });
+                    addressCell.appendChild(pill);
+                }
+            }
+
+            // Prepend monogram avatar cell
+            if (nameCell && !tr.querySelector('td[data-df-role="avatar"]')) {
+                const avatarCell = document.createElement('td');
+                avatarCell.setAttribute('data-df-role', 'avatar');
+                const av = document.createElement('div');
+                av.className = 'df-avatar';
+                av.textContent = monogramOf(nameCell.textContent);
+                avatarCell.appendChild(av);
+                tr.insertBefore(avatarCell, tr.firstChild);
+            }
+        });
+    }
 })();
