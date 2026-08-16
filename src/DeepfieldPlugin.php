@@ -10,7 +10,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Panel;
 use Filament\Support\Colors\Color;
-use Filament\Support\Enums\ThemeMode;
 use Illuminate\Support\Facades\File;
 
 class DeepfieldPlugin implements Plugin, HasPluginSettings
@@ -27,7 +26,6 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         $this->publishAssets();
 
         $panel
-            ->defaultThemeMode(ThemeMode::Dark)
             ->colors([
                 'primary' => Color::Violet,
                 'gray'    => Color::Slate,
@@ -97,6 +95,7 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 
         return <<<HTML
 <meta name="df-settings" content="{$settings}">
+<script>(function(){try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}})();</script>
 <link rel="preload" href="{$spaceGrotesk}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{$jetbrains}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{$orbitron}" as="font" type="font/woff2" crossorigin>
