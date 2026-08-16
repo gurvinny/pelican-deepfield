@@ -425,27 +425,43 @@ a:hover, .fi-link:hover {
  * Server console — terminal-first, with optional CRT bloom
  * ============================================================= */
 
+/* Terminal container — Pelican + Filament + xterm.js */
 .fi-server-console,
 [class*="server-console"],
-[class*="console-terminal"] {
+[class*="console-terminal"],
+.xterm,
+.xterm-screen,
+div:has(> .xterm) {
     background: #030410 !important;
-    border: 1px solid var(--df-glass-border-strong);
     border-radius: var(--df-radius-lg);
     font-family: 'JetBrains Mono', ui-monospace, monospace !important;
-    color: #d4faff;
     position: relative;
     overflow: hidden;
 }
 
+/* xterm inner surfaces */
+.xterm-viewport,
+.xterm-screen,
+.xterm-rows {
+    background: transparent !important;
+    color: #d4faff !important;
+}
+
+/* CRT bloom — glow text + scanlines when enabled */
+body[data-df-crt="1"] .xterm,
+body[data-df-crt="1"] .xterm-rows,
+body[data-df-crt="1"] .xterm-rows span,
 body[data-df-crt="1"] .fi-server-console,
 body[data-df-crt="1"] [class*="server-console"],
 body[data-df-crt="1"] [class*="console-terminal"] {
     text-shadow: 0 0 3px currentColor, 0 0 6px rgba(94, 234, 212, 0.25);
 }
 
+body[data-df-crt="1"] .xterm::after,
 body[data-df-crt="1"] .fi-server-console::after,
 body[data-df-crt="1"] [class*="server-console"]::after,
-body[data-df-crt="1"] [class*="console-terminal"]::after {
+body[data-df-crt="1"] [class*="console-terminal"]::after,
+body[data-df-crt="1"] div:has(> .xterm)::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -459,6 +475,7 @@ body[data-df-crt="1"] [class*="console-terminal"]::after {
     );
     mix-blend-mode: overlay;
     animation: df-scan 8s linear infinite;
+    z-index: 5;
 }
 
 @keyframes df-scan {
