@@ -45,6 +45,8 @@ php artisan p:plugin:install
 # select "deepfield"
 ```
 
+> **Important:** the target folder **must** be named `deepfield` (matching the `id` in `plugin.json`). If you `git clone` without the trailing `deepfield` argument, the folder ends up as `pelican-deepfield` and the panel will refuse it with a "plugin id mismatch" error. Just rename the folder — no other changes needed.
+
 Hard-refresh the panel (`Ctrl+Shift+R`). You should see the nebula fade in and the starfield settle behind your sidebar.
 
 ---
