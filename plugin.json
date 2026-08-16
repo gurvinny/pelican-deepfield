@@ -1,0 +1,13 @@
+{
+    "id": "deepfield",
+    "name": "Deepfield",
+    "author": "gurvinny",
+    "version": "1.0.0",
+    "description": "Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.",
+    "category": "theme",
+    "namespace": "Gurvinny\\Deepfield",
+    "class": "DeepfieldPlugin",
+    "panels": ["admin", "app", "server"],
+    "panel_version": "^1.0.0",
+    "update_url": "https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/update.json"
+}

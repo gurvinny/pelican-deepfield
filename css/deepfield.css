@@ -1,0 +1,491 @@
+/* =============================================================
+ * Deepfield — a deep-cosmic theme for Pelican Panel
+ * ============================================================= */
+
+/* ---- Fonts (self-hosted, OFL) --------------------------------- */
+@font-face {
+    font-family: 'Space Grotesk';
+    src: url('fonts/SpaceGrotesk-Variable.woff2') format('woff2-variations');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('fonts/JetBrainsMono-Variable.woff2') format('woff2-variations');
+    font-weight: 100 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Orbitron';
+    src: url('fonts/Orbitron-Variable.woff2') format('woff2-variations');
+    font-weight: 400 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ---- Token layer --------------------------------------------- */
+:root {
+    /* Backdrop */
+    --df-bg-void:      #050614;
+    --df-bg-deep:      #0b0a1e;
+    --df-bg-shelf:     #12112a;
+    --df-bg-lift:      #191835;
+
+    /* Ink */
+    --df-ink:          #e8ecff;
+    --df-ink-soft:     #c8cff0;
+    --df-ink-muted:    #8b90b8;
+    --df-ink-dim:      #5b608a;
+
+    /* Accents */
+    --df-violet:       #a78bfa;
+    --df-violet-deep:  #7c5cf0;
+    --df-cyan:         #38e1ff;
+    --df-teal:         #5eead4;
+    --df-magenta:      #f472b6;
+
+    /* Aurora gradient */
+    --df-aurora:       linear-gradient(120deg, var(--df-cyan) 0%, var(--df-teal) 50%, var(--df-violet) 100%);
+    --df-aurora-soft:  linear-gradient(120deg, rgba(56,225,255,0.16), rgba(94,234,212,0.16), rgba(167,139,250,0.20));
+
+    /* Glass — heavy tint to protect readability */
+    --df-glass-sidebar: rgba(11, 10, 30, 0.78);
+    --df-glass-topbar:  rgba(11, 10, 30, 0.68);
+    --df-glass-card:    rgba(18, 17, 42, 0.90);
+    --df-glass-modal:   rgba(11, 10, 30, 0.96);
+    --df-glass-border:  rgba(167, 139, 250, 0.22);
+    --df-glass-border-strong: rgba(167, 139, 250, 0.36);
+
+    /* Glow */
+    --df-glow-h1:      0 0 24px rgba(94, 234, 212, 0.35), 0 0 48px rgba(167, 139, 250, 0.18);
+    --df-glow-focus:   0 0 0 2px rgba(56, 225, 255, 0.55), 0 0 18px rgba(56, 225, 255, 0.35);
+    --df-glow-primary: 0 0 20px rgba(94, 234, 212, 0.28), 0 0 40px rgba(167, 139, 250, 0.18);
+
+    /* Status colors — conventional semantics, aurora-lifted */
+    --df-status-running:   #34d399;
+    --df-status-starting:  #facc15;
+    --df-status-stopping:  #fb923c;
+    --df-status-offline:   #f87171;
+
+    --df-status-running-glow:  0 0 12px rgba(52, 211, 153, 0.55);
+    --df-status-starting-glow: 0 0 12px rgba(250, 204, 21, 0.55);
+    --df-status-stopping-glow: 0 0 12px rgba(251, 146, 60, 0.55);
+    --df-status-offline-glow:  0 0 12px rgba(248, 113, 113, 0.55);
+
+    /* Radii + easing */
+    --df-radius-sm: 6px;
+    --df-radius-md: 10px;
+    --df-radius-lg: 16px;
+    --df-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Canvas backdrop layers ---------------------------------- */
+#df-nebula,
+#df-starfield {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+}
+
+#df-nebula    { z-index: 0; opacity: 0.55; }
+#df-starfield { z-index: 1; }
+
+/* Panel content sits above the canvas */
+body > *:not(#df-nebula):not(#df-starfield) {
+    position: relative;
+    z-index: 2;
+}
+
+/* ---- Body / typography reset --------------------------------- */
+html,
+body {
+    background: var(--df-bg-void) !important;
+    color: var(--df-ink);
+    font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'ss01', 'cv11';
+}
+
+/* Force dark; hide theme switcher */
+html { color-scheme: dark; }
+[aria-label*="Toggle theme" i],
+[aria-label*="theme mode" i] {
+    display: none !important;
+}
+
+/* Kill Filament's default body gradient/tile if any */
+body::before,
+body::after { content: none !important; }
+
+/* Monospace everywhere Filament asks for it */
+code, kbd, samp, pre,
+.fi-code, .fi-badge-code, .fi-fo-code-editor,
+[class*="mono"] {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace !important;
+    font-feature-settings: 'liga' 0, 'calt' 0;
+}
+
+/* ---- Display headings (H1 only, restrained) ------------------- */
+.fi-header-heading,
+.fi-page-header-heading,
+.fi-simple-header-heading,
+h1.fi-header-heading,
+.fi-modal-heading {
+    font-family: 'Orbitron', 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.035em;
+    text-shadow: var(--df-glow-h1);
+}
+
+/* ---- Sidebar = primary glass slab ---------------------------- */
+.fi-sidebar,
+aside.fi-sidebar,
+.fi-sidebar-nav {
+    background: var(--df-glass-sidebar) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.25);
+    backdrop-filter: blur(24px) saturate(1.25);
+    border-right: 1px solid var(--df-glass-border);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.35);
+}
+
+.fi-sidebar-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--df-glass-border);
+}
+
+.fi-sidebar-nav-groups {
+    padding-block: 0.75rem;
+}
+
+.fi-sidebar-group-label {
+    color: var(--df-ink-muted) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+/* Nav item */
+.fi-sidebar-item-button {
+    color: var(--df-ink-soft) !important;
+    border-radius: var(--df-radius-md);
+    transition: background 200ms var(--df-ease-out), color 200ms var(--df-ease-out), box-shadow 200ms var(--df-ease-out);
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-sidebar-item-button:hover {
+    background: rgba(167, 139, 250, 0.08) !important;
+    color: var(--df-ink) !important;
+}
+
+/* Active nav item — aurora bar + glow */
+.fi-sidebar-item-active > .fi-sidebar-item-button,
+.fi-sidebar-item-button[aria-current="page"],
+.fi-sidebar-item-button.fi-active {
+    background: var(--df-aurora-soft) !important;
+    color: var(--df-ink) !important;
+    box-shadow: inset 3px 0 0 0 var(--df-cyan), 0 0 24px rgba(56, 225, 255, 0.15);
+}
+
+.fi-sidebar-item-active > .fi-sidebar-item-button::before,
+.fi-sidebar-item-button[aria-current="page"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--df-aurora);
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.fi-sidebar-item-icon,
+.fi-sidebar-item-button svg {
+    color: currentColor;
+}
+
+/* ---- Topbar --------------------------------------------------- */
+.fi-topbar,
+header.fi-topbar {
+    background: var(--df-glass-topbar) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    backdrop-filter: blur(16px) saturate(1.2);
+    border-bottom: 1px solid var(--df-glass-border);
+}
+
+/* ---- Main content surfaces (semi-glass, readable) ------------ */
+.fi-main,
+main.fi-main {
+    background: transparent !important;
+}
+
+.fi-section,
+.fi-fo-component-ctn,
+.fi-wi-stats-overview-stat,
+.fi-ta-ctn,
+.fi-in-ctn,
+.fi-card,
+[class*="fi-widget"] {
+    background: var(--df-glass-card) !important;
+    border: 1px solid var(--df-glass-border);
+    border-radius: var(--df-radius-lg);
+    box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 10px 30px -12px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.fi-section-header,
+.fi-section-content {
+    background: transparent !important;
+}
+
+/* Tables — flush with card */
+.fi-ta-table {
+    background: transparent !important;
+    color: var(--df-ink-soft);
+}
+
+.fi-ta-header-cell,
+.fi-ta-cell,
+thead.fi-ta-header,
+tr {
+    border-color: var(--df-glass-border) !important;
+}
+
+tbody.fi-ta-body tr:hover {
+    background: rgba(167, 139, 250, 0.06) !important;
+}
+
+/* ---- Modals + slide-overs + dropdowns (near opaque) ----------- */
+.fi-modal-window,
+.fi-modal-content,
+.fi-dropdown-panel,
+.fi-slide-over-window {
+    background: var(--df-glass-modal) !important;
+    border: 1px solid var(--df-glass-border-strong);
+    border-radius: var(--df-radius-lg);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 40px rgba(167, 139, 250, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.fi-modal-close-overlay {
+    background: rgba(3, 4, 12, 0.72) !important;
+    backdrop-filter: blur(4px);
+}
+
+/* ---- Inputs -------------------------------------------------- */
+.fi-input,
+.fi-select-input,
+.fi-textarea,
+input.fi-input,
+select.fi-select-input,
+textarea.fi-textarea {
+    background: rgba(5, 6, 20, 0.6) !important;
+    color: var(--df-ink) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-md) !important;
+    transition: box-shadow 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
+}
+
+.fi-input::placeholder,
+.fi-textarea::placeholder {
+    color: var(--df-ink-dim) !important;
+}
+
+.fi-input-wrp:focus-within,
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus,
+:focus-visible {
+    outline: none !important;
+    border-color: var(--df-cyan) !important;
+    box-shadow: var(--df-glow-focus) !important;
+}
+
+/* ---- Buttons ------------------------------------------------- */
+.fi-btn {
+    border-radius: var(--df-radius-md);
+    font-weight: 500;
+    transition: transform 160ms var(--df-ease-out), box-shadow 200ms var(--df-ease-out), background 200ms var(--df-ease-out);
+}
+
+.fi-btn:active { transform: translateY(1px); }
+
+/* Primary — aurora gradient fill with glow */
+.fi-btn-color-primary,
+.fi-btn[class*="primary"] {
+    background: var(--df-aurora) !important;
+    color: #060614 !important;
+    border: none !important;
+    box-shadow: var(--df-glow-primary);
+    font-weight: 600;
+}
+
+.fi-btn-color-primary:hover,
+.fi-btn[class*="primary"]:hover {
+    box-shadow: 0 0 28px rgba(94, 234, 212, 0.45), 0 0 56px rgba(167, 139, 250, 0.25);
+    filter: brightness(1.06);
+}
+
+/* Secondary / ghost — glass */
+.fi-btn-color-gray,
+.fi-btn:not([class*="primary"]):not([class*="danger"]):not([class*="warning"]):not([class*="success"]) {
+    background: rgba(167, 139, 250, 0.08);
+    color: var(--df-ink-soft);
+    border: 1px solid var(--df-glass-border);
+}
+
+/* Danger */
+.fi-btn-color-danger { box-shadow: 0 0 18px rgba(244, 63, 94, 0.28); }
+/* Success */
+.fi-btn-color-success { box-shadow: 0 0 18px rgba(52, 211, 153, 0.28); }
+/* Warning */
+.fi-btn-color-warning { box-shadow: 0 0 18px rgba(250, 204, 21, 0.28); }
+
+/* ---- Badges (status semantics + glow) ------------------------ */
+.fi-badge {
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
+}
+
+.fi-badge-color-success,
+.fi-badge[class*="running"],
+[data-status="running"] .fi-badge {
+    background: rgba(52, 211, 153, 0.12) !important;
+    color: var(--df-status-running) !important;
+    border-color: rgba(52, 211, 153, 0.36);
+    box-shadow: var(--df-status-running-glow);
+}
+
+.fi-badge-color-warning,
+.fi-badge[class*="starting"],
+[data-status="starting"] .fi-badge {
+    background: rgba(250, 204, 21, 0.12) !important;
+    color: var(--df-status-starting) !important;
+    border-color: rgba(250, 204, 21, 0.36);
+    box-shadow: var(--df-status-starting-glow);
+}
+
+.fi-badge[class*="stopping"],
+[data-status="stopping"] .fi-badge {
+    background: rgba(251, 146, 60, 0.12) !important;
+    color: var(--df-status-stopping) !important;
+    border-color: rgba(251, 146, 60, 0.36);
+    box-shadow: var(--df-status-stopping-glow);
+}
+
+.fi-badge-color-danger,
+.fi-badge[class*="offline"],
+[data-status="offline"] .fi-badge {
+    background: rgba(248, 113, 113, 0.12) !important;
+    color: var(--df-status-offline) !important;
+    border-color: rgba(248, 113, 113, 0.36);
+    box-shadow: var(--df-status-offline-glow);
+}
+
+/* ---- Links --------------------------------------------------- */
+a, .fi-link {
+    color: var(--df-cyan);
+    text-decoration: none;
+    transition: color 160ms var(--df-ease-out), text-shadow 160ms var(--df-ease-out);
+}
+a:hover, .fi-link:hover {
+    color: var(--df-teal);
+    text-shadow: 0 0 8px rgba(94, 234, 212, 0.4);
+}
+
+/* ---- Scrollbar ----------------------------------------------- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167, 139, 250, 0.35) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.28);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(94, 234, 212, 0.4); background-clip: padding-box; }
+
+/* =============================================================
+ * Server console — terminal-first, with optional CRT bloom
+ * ============================================================= */
+
+.fi-server-console,
+[class*="server-console"],
+[class*="console-terminal"] {
+    background: #030410 !important;
+    border: 1px solid var(--df-glass-border-strong);
+    border-radius: var(--df-radius-lg);
+    font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+    color: #d4faff;
+    position: relative;
+    overflow: hidden;
+}
+
+body[data-df-crt="1"] .fi-server-console,
+body[data-df-crt="1"] [class*="server-console"],
+body[data-df-crt="1"] [class*="console-terminal"] {
+    text-shadow: 0 0 3px currentColor, 0 0 6px rgba(94, 234, 212, 0.25);
+}
+
+body[data-df-crt="1"] .fi-server-console::after,
+body[data-df-crt="1"] [class*="server-console"]::after,
+body[data-df-crt="1"] [class*="console-terminal"]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(94, 234, 212, 0.055) 3px,
+        rgba(0, 0, 0, 0) 4px
+    );
+    mix-blend-mode: overlay;
+    animation: df-scan 8s linear infinite;
+}
+
+@keyframes df-scan {
+    from { background-position-y: 0; }
+    to   { background-position-y: 32px; }
+}
+
+/* =============================================================
+ * Motion — respect user + system preferences
+ * ============================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+    body[data-df-crt="1"] .fi-server-console::after { animation: none !important; }
+}
+
+/* =============================================================
+ * A11y — focus ring guaranteed
+ * ============================================================= */
+
+:focus-visible {
+    outline: 2px solid var(--df-cyan);
+    outline-offset: 2px;
+}
