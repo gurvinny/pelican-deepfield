@@ -384,107 +384,69 @@
         }
         reflowCards();
 
-        // Watch tbody for Livewire re-renders that clobber our injected DOM
-        const tbody = document.querySelector('.fi-ta-table tbody');
-        if (tbody && !tbody.__dfObserved) {
-            tbody.__dfObserved = true;
+        // Watch the schema grid for Livewire re-renders that clobber our wrapping
+        const grid = document.querySelector('.fi-grid.fi-sc, main');
+        if (grid && !grid.__dfObserved) {
+            grid.__dfObserved = true;
             if (cardObs) cardObs.disconnect();
             cardObs = new MutationObserver(() => requestAnimationFrame(reflowCards));
-            cardObs.observe(tbody, { childList: true, subtree: false });
+            cardObs.observe(grid, { childList: true, subtree: true });
         }
     }
 
-    function monogramOf(name) {
-        const clean = (name || '').trim();
-        if (!clean) return '·';
-        const parts = clean.split(/\s+/).filter(Boolean);
-        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    // Find Pelican's per-egg icon URL if present in the row DOM.
-    // Pelican renders it as inline background-image on a decorative div.
-    function findEggIconUrl(tr) {
-        // 1. Look through descendant elements for inline style with background-image url
-        const withStyle = tr.querySelectorAll('[style*="background"]');
-        for (const el of withStyle) {
-            const style = el.getAttribute('style') || '';
-            const m = style.match(/url\(['"]?([^'")]+\/storage\/icons\/egg\/[^'")]+)['"]?\)/i);
-            if (m) return m[1];
-        }
-        // 2. Fall back to any <img> in the row pointing at the icons dir
-        const img = tr.querySelector('img[src*="/storage/icons/egg/"]');
-        if (img) return img.getAttribute('src');
-        return null;
-    }
+    // Pelican renders server cards as .relative.cursor-pointer inside a Filament
+    // schema grid. We: (1) stagger animation-delay via --df-idx, (2) wrap IP:port
+    // text with a click-to-copy pill without stealing the card's navigation click.
+    const IP_RE = /(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/;
+    const IP_RE_G = /(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/g;
 
     function reflowCards() {
-        const rows = document.querySelectorAll('body[data-df-page="server-list"] .fi-ta-table tbody tr');
-        rows.forEach((tr, idx) => {
-            if (tr.__dfReflowed) return;
-            tr.__dfReflowed = true;
-            tr.style.setProperty('--df-idx', idx);
+        const cards = document.querySelectorAll('body[data-df-page="server-list"] .relative.cursor-pointer');
+        cards.forEach((card, idx) => {
+            if (card.__dfReflowed) return;
+            card.__dfReflowed = true;
+            card.style.setProperty('--df-idx', idx);
 
-            // Pull the egg icon URL BEFORE we tag/hide cells
-            const eggIcon = findEggIconUrl(tr);
-            if (eggIcon) tr.style.setProperty('--df-egg-icon', `url("${eggIcon}")`);
+            // Walk text nodes inside the card looking for an IP:port. When we find
+            // one, split the node and wrap the match in a stopPropagation pill.
+            const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, {
+                acceptNode: (n) => IP_RE.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+            });
+            const textNodes = [];
+            let n; while ((n = walker.nextNode())) textNodes.push(n);
 
-            const cells = Array.from(tr.querySelectorAll(':scope > td'));
-            let nameCell = null;
-            let addressCell = null;
-            let badgeCell = null;
+            textNodes.forEach((tn) => {
+                if (tn.__dfWrapped) return;
+                const text = tn.nodeValue;
+                const m = text.match(IP_RE);
+                if (!m) return;
+                const ip = m[0];
+                const before = text.slice(0, m.index);
+                const after = text.slice(m.index + ip.length);
+                const parent = tn.parentNode;
+                if (!parent) return;
 
-            for (const td of cells) {
-                const text = td.textContent.trim();
-                if (!text) continue;
-                if (td.querySelector('.fi-badge')) { badgeCell = badgeCell || td; continue; }
-                if (/(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/.test(text)) { addressCell = addressCell || td; continue; }
-                if (!nameCell) { nameCell = td; continue; }
-            }
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = 'df-ip-copy';
+                pill.textContent = ip;
+                pill.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    try { navigator.clipboard && navigator.clipboard.writeText(ip); } catch (_) {}
+                    pill.classList.add('df-copied');
+                    const prev = pill.textContent;
+                    pill.textContent = 'Copied';
+                    setTimeout(() => { pill.textContent = prev; pill.classList.remove('df-copied'); }, 1400);
+                });
 
-            if (nameCell) nameCell.setAttribute('data-df-role', 'name');
-            if (badgeCell) badgeCell.setAttribute('data-df-role', 'badge');
-            if (addressCell) {
-                addressCell.setAttribute('data-df-role', 'meta');
-                const m = addressCell.textContent.match(/(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/);
-                if (m && !addressCell.querySelector('.df-ip-copy')) {
-                    const ip = m[0];
-                    addressCell.innerHTML = '';
-                    const pill = document.createElement('button');
-                    pill.type = 'button';
-                    pill.className = 'df-ip-copy';
-                    pill.textContent = ip;
-                    pill.addEventListener('click', (ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        try { navigator.clipboard && navigator.clipboard.writeText(ip); } catch (_) {}
-                        pill.classList.add('df-copied');
-                        const prev = pill.textContent;
-                        pill.textContent = 'Copied';
-                        setTimeout(() => {
-                            pill.textContent = prev;
-                            pill.classList.remove('df-copied');
-                        }, 1400);
-                    });
-                    addressCell.appendChild(pill);
-                }
-            }
-
-            // Avatar cell — prefer egg icon, fall back to monogram
-            if (nameCell && !tr.querySelector('td[data-df-role="avatar"]')) {
-                const avatarCell = document.createElement('td');
-                avatarCell.setAttribute('data-df-role', 'avatar');
-                const av = document.createElement('div');
-                av.className = 'df-avatar';
-                if (eggIcon) {
-                    av.classList.add('df-avatar-icon');
-                    av.style.backgroundImage = `url("${eggIcon}")`;
-                } else {
-                    av.textContent = monogramOf(nameCell.textContent);
-                }
-                avatarCell.appendChild(av);
-                tr.insertBefore(avatarCell, tr.firstChild);
-            }
+                const frag = document.createDocumentFragment();
+                if (before) frag.appendChild(document.createTextNode(before));
+                frag.appendChild(pill);
+                if (after) frag.appendChild(document.createTextNode(after));
+                parent.replaceChild(frag, tn);
+                pill.__dfWrapped = true;
+            });
         });
     }
 })();
