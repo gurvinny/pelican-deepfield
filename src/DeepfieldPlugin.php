@@ -2,8 +2,8 @@
 
 namespace Gurvinny\Deepfield;
 
+use App\Contracts\Plugins\HasPluginSettings;
 use App\Traits\EnvironmentWriterTrait;
-use App\Contracts\HasPluginSettings;
 use Filament\Contracts\Plugin;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
