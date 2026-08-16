@@ -243,6 +243,33 @@ main.fi-main {
     -webkit-backdrop-filter: blur(6px);
 }
 
+/* ---- Grid spacing — Filament collapses gap to 0 when overridden;
+       restore breathing room between stats/widgets/sections. */
+.fi-page-content,
+.fi-page-content-ctn,
+.fi-main-ctn,
+.fi-wi,
+.fi-widgets,
+.fi-wi-stats-overview,
+.fi-wi-stats-overview-stats-ctn,
+main .grid {
+    gap: 1rem !important;
+}
+
+.fi-page-content > *,
+.fi-main-ctn > *,
+.fi-wi + .fi-wi,
+.fi-section + .fi-section {
+    margin-top: 0.25rem;
+}
+
+/* Server-console page specifically packs a stats widget on top of the console */
+.fi-server-details,
+[class*="server-details"],
+.fi-page.fi-resource-page .fi-page-content {
+    gap: 1rem !important;
+}
+
 .fi-section-header,
 .fi-section-content {
     background: transparent !important;
@@ -453,34 +480,153 @@ a:hover, .fi-link:hover {
 }
 #send-command::placeholder { color: var(--df-ink-dim) !important; }
 
-/* CRT bloom — scanline overlay on wrapper (WebGL canvas can't get text-shadow) */
+/* CRT overlay — sit ABOVE xterm's WebGL canvas layers (they use z-index 0–4).
+   Scanline density controlled by body[data-df-scan="fine|normal|heavy"]. */
 body[data-df-crt="1"] #terminal::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: repeating-linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0px,
-        rgba(0, 0, 0, 0) 2px,
-        rgba(94, 234, 212, 0.06) 3px,
-        rgba(0, 0, 0, 0) 4px
-    );
-    mix-blend-mode: overlay;
     animation: df-scan 8s linear infinite;
-    z-index: 5;
+    z-index: 999;
     border-radius: var(--df-radius-lg);
+    opacity: 0.9;
 }
 
-/* Subtle vignette on the terminal edges for CRT curvature vibe */
+body[data-df-crt="1"][data-df-scan="fine"] #terminal::after {
+    background: repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 1px,
+        rgba(94,234,212,0.06) 2px, rgba(0,0,0,0) 3px);
+}
+body[data-df-crt="1"][data-df-scan="normal"] #terminal::after,
+body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
+    background: repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+        rgba(94,234,212,0.13) 3px, rgba(0,0,0,0) 4px);
+}
+body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
+    background: repeating-linear-gradient(to bottom,
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+        rgba(94,234,212,0.22) 3px, rgba(0,0,0,0) 5px);
+    opacity: 1;
+}
+
+/* CRT edge vignette — also above canvas */
 body[data-df-crt="1"] #terminal::before {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.35) 100%);
-    z-index: 4;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%);
+    z-index: 998;
     border-radius: var(--df-radius-lg);
+}
+
+/* xterm canvases are drawn absolutely; make sure they don't establish a stacking context that traps our overlay */
+#terminal .xterm-viewport,
+#terminal .xterm-screen,
+#terminal .xterm canvas {
+    z-index: auto !important;
+}
+
+/* ---- Terminal bell — aurora border flash ---- */
+@keyframes df-bell-flash {
+    0%   { box-shadow: 0 0 0 0 rgba(56, 225, 255, 0.0), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-glass-border-strong); }
+    30%  { box-shadow: 0 0 30px 6px rgba(94, 234, 212, 0.65), 0 0 60px 12px rgba(167, 139, 250, 0.4), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-cyan); }
+    100% { box-shadow: 0 0 0 0 rgba(56, 225, 255, 0.0), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-glass-border-strong); }
+}
+#terminal.df-bell-flash { animation: df-bell-flash 700ms var(--df-ease-out) 1; }
+
+/* ---- Idle border pulse — subtle aurora cycle after 8s of no output ---- */
+@keyframes df-idle-pulse {
+    0%   { border-color: rgba(56, 225, 255, 0.35);  box-shadow: 0 0 20px rgba(56, 225, 255, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
+    33%  { border-color: rgba(94, 234, 212, 0.35);  box-shadow: 0 0 20px rgba(94, 234, 212, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
+    66%  { border-color: rgba(167, 139, 250, 0.35); box-shadow: 0 0 20px rgba(167, 139, 250, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
+    100% { border-color: rgba(56, 225, 255, 0.35);  box-shadow: 0 0 20px rgba(56, 225, 255, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
+}
+#terminal.df-idle { animation: df-idle-pulse 6s ease-in-out infinite; }
+
+/* ---- Copy-to-clipboard toast (IP badge) ---- */
+#terminal.df-toast::before {
+    content: attr(data-df-toast) !important;
+    position: absolute !important;
+    top: 0.5rem;
+    right: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    background: var(--df-glass-modal);
+    color: var(--df-teal);
+    border: 1px solid var(--df-glass-border-strong);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 1000;
+    pointer-events: none;
+    animation: df-toast-in 220ms var(--df-ease-out) both;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 12px rgba(94, 234, 212, 0.3);
+    inset: auto 0.75rem auto auto;
+    background-image: none;
+    mix-blend-mode: normal;
+    border-radius: 999px !important;
+}
+@keyframes df-toast-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- xterm hyperlink hover — cyan glow (WebLinksAddon + our IP provider) ---- */
+.xterm .xterm-link-layer canvas { filter: none; }
+.xterm a,
+.xterm-hover-link {
+    color: var(--df-cyan) !important;
+    text-shadow: 0 0 6px rgba(56, 225, 255, 0.6);
+    text-decoration: underline dotted rgba(94, 234, 212, 0.7);
+    text-underline-offset: 3px;
+}
+
+/* ---- Log severity gutter (xterm decorations) ---- */
+.xterm-decoration {
+    border-radius: 2px;
+    opacity: 0.85;
+    box-shadow: 0 0 6px currentColor;
+}
+
+/* ---- xterm search bar (SearchBarAddon) ---- */
+.xterm-search-bar,
+.xterm-search-bar__container {
+    background: var(--df-glass-modal) !important;
+    border: 1px solid var(--df-glass-border-strong) !important;
+    border-radius: var(--df-radius-md) !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 225, 255, 0.15);
+    backdrop-filter: blur(10px);
+    color: var(--df-ink);
+    font-family: 'JetBrains Mono', monospace !important;
+}
+.xterm-search-bar input,
+.xterm-search-bar__input {
+    background: rgba(5, 6, 20, 0.6) !important;
+    color: var(--df-ink) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-sm) !important;
+    padding: 0.4rem 0.6rem !important;
+}
+.xterm-search-bar input:focus,
+.xterm-search-bar__input:focus {
+    outline: none !important;
+    border-color: var(--df-cyan) !important;
+    box-shadow: var(--df-glow-focus) !important;
+}
+.xterm-search-bar button,
+.xterm-search-bar__button {
+    background: rgba(167, 139, 250, 0.10) !important;
+    color: var(--df-ink-soft) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-sm) !important;
+}
+.xterm-search-bar button:hover,
+.xterm-search-bar__button:hover {
+    background: var(--df-aurora-soft) !important;
+    color: var(--df-ink) !important;
 }
 
 @keyframes df-scan {

@@ -77,11 +77,13 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
     protected function settings(): array
     {
         return [
-            'star_density'   => config('deepfield.star_density', 'medium'),
-            'nebula_enabled' => (bool) config('deepfield.nebula_enabled', true),
-            'nebula_hue'     => config('deepfield.nebula_hue', 'violet'),
-            'crt_bloom'      => (bool) config('deepfield.crt_bloom', true),
-            'reduce_motion'  => (bool) config('deepfield.reduce_motion', false),
+            'star_density'     => config('deepfield.star_density', 'medium'),
+            'nebula_enabled'   => (bool) config('deepfield.nebula_enabled', true),
+            'nebula_hue'       => config('deepfield.nebula_hue', 'violet'),
+            'crt_bloom'        => (bool) config('deepfield.crt_bloom', true),
+            'reduce_motion'    => (bool) config('deepfield.reduce_motion', false),
+            'terminal_palette' => config('deepfield.terminal_palette', 'cosmic'),
+            'scanline_density' => config('deepfield.scanline_density', 'normal'),
         ];
     }
 
@@ -99,32 +101,144 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 (function(){
   try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}
 
-  /* Deepfield xterm.js palette shim
-     Pelican bakes the terminal palette into inline JS in server-console.blade.php
-     and renders via WebGL canvas, which CSS cannot color. We intercept
-     window.Xterm the moment Vite assigns it and monkey-patch the Terminal
-     constructor to merge our theme into every instance. */
-  var DF_XTERM = {
-    background: '#050614',
-    foreground: '#e8ecff',
-    cursor: '#38e1ff',
-    cursorAccent: '#050614',
-    selectionBackground: 'rgba(94, 234, 212, 0.35)',
-    selectionForeground: '#050614',
-    black: '#0b0a1e', red: '#f87171', green: '#5eead4', yellow: '#facc15',
-    blue: '#7c5cf0', magenta: '#f472b6', cyan: '#38e1ff', white: '#c8cff0',
-    brightBlack: '#5b608a', brightRed: '#fca5a5', brightGreen: '#a7f3d0',
-    brightYellow: '#fde68a', brightBlue: '#a78bfa', brightMagenta: '#fbcfe8',
-    brightCyan: '#7dd3fc', brightWhite: '#ffffff'
+  /* ---------- Palette catalogue ---------- */
+  var PAL = {
+    cosmic: {
+      background:'#050614', foreground:'#e8ecff', cursor:'#38e1ff', cursorAccent:'#050614',
+      selectionBackground:'rgba(94,234,212,0.40)', selectionForeground:'#050614',
+      black:'#0b0a1e', blue:'#5b8dff', green:'#22c55e', cyan:'#0ea5e9',
+      red:'#ef4444', magenta:'#a855f7', yellow:'#eab308', white:'#d4d4d8',
+      brightBlack:'#6b7280', brightBlue:'#60a5fa', brightGreen:'#4ade80', brightCyan:'#22d3ee',
+      brightRed:'#f87171', brightMagenta:'#e879f9', brightYellow:'#fde047', brightWhite:'#ffffff'
+    },
+    minecraft: {
+      background:'#050614', foreground:'#ffffff', cursor:'#ffffff', cursorAccent:'#050614',
+      selectionBackground:'rgba(255,255,85,0.40)', selectionForeground:'#050614',
+      black:'#000000', blue:'#0000aa', green:'#00aa00', cyan:'#00aaaa',
+      red:'#aa0000', magenta:'#aa00aa', yellow:'#ffaa00', white:'#aaaaaa',
+      brightBlack:'#555555', brightBlue:'#5555ff', brightGreen:'#55ff55', brightCyan:'#55ffff',
+      brightRed:'#ff5555', brightMagenta:'#ff55ff', brightYellow:'#ffff55', brightWhite:'#ffffff'
+    },
+    solarized_aurora: {
+      background:'#001b26', foreground:'#93a1a1', cursor:'#2aa198', cursorAccent:'#001b26',
+      selectionBackground:'rgba(42,161,152,0.40)', selectionForeground:'#001b26',
+      black:'#073642', blue:'#268bd2', green:'#859900', cyan:'#2aa198',
+      red:'#dc322f', magenta:'#d33682', yellow:'#b58900', white:'#93a1a1',
+      brightBlack:'#586e75', brightBlue:'#83a8ff', brightGreen:'#b0d34a', brightCyan:'#5eead4',
+      brightRed:'#ff6b68', brightMagenta:'#ff7ebc', brightYellow:'#fde047', brightWhite:'#fdf6e3'
+    },
+    nord_aurora: {
+      background:'#0d1420', foreground:'#e5e9f0', cursor:'#88c0d0', cursorAccent:'#0d1420',
+      selectionBackground:'rgba(136,192,208,0.40)', selectionForeground:'#0d1420',
+      black:'#2e3440', blue:'#5e81ac', green:'#a3be8c', cyan:'#88c0d0',
+      red:'#bf616a', magenta:'#b48ead', yellow:'#ebcb8b', white:'#d8dee9',
+      brightBlack:'#4c566a', brightBlue:'#81a1c1', brightGreen:'#b6d195', brightCyan:'#8fbcbb',
+      brightRed:'#d08a91', brightMagenta:'#c9a8c5', brightYellow:'#f0d798', brightWhite:'#eceff4'
+    }
   };
+
+  /* Read settings from meta */
+  var CFG = { terminal_palette:'cosmic', crt_bloom:true, reduce_motion:false };
+  try { var m = document.querySelector('meta[name="df-settings"]'); if (m) Object.assign(CFG, JSON.parse(m.content)); } catch(e){}
+  var THEME = PAL[CFG.terminal_palette] || PAL.cosmic;
+
+  /* Terminal instance hooks — installed after constructor */
+  function installHooks(term){
+    if (!term || term.__dfHooked) return;
+    term.__dfHooked = true;
+    var wrapper = document.getElementById('terminal');
+    var idleTimer = null;
+
+    /* Log severity gutter */
+    var SEV = { INFO:'#4ade80', WARN:'#fde047', ERROR:'#f87171', FATAL:'#f87171', DEBUG:'#22d3ee', TRACE:'#5b608a' };
+    if (typeof term.onLineFeed === 'function' && typeof term.registerMarker === 'function' && typeof term.registerDecoration === 'function') {
+      term.onLineFeed(function(){
+        try {
+          var buf = term.buffer.active;
+          var y = buf.cursorY - 1;
+          if (y < 0) return;
+          var line = buf.getLine(y);
+          if (!line) return;
+          var text = line.translateToString(true);
+          var mm = text.match(/\/(INFO|WARN|ERROR|FATAL|DEBUG|TRACE)\]:/i);
+          if (!mm) return;
+          var color = SEV[mm[1].toUpperCase()];
+          var marker = term.registerMarker(0);
+          if (!marker) return;
+          term.registerDecoration({ marker: marker, x: 0, width: 1, height: 1, layer: 'top', backgroundColor: color });
+        } catch(e){}
+      });
+    }
+
+    /* Bell → aurora border flash */
+    if (typeof term.onBell === 'function') {
+      term.onBell(function(){
+        if (!wrapper) return;
+        wrapper.classList.remove('df-bell-flash');
+        void wrapper.offsetWidth;
+        wrapper.classList.add('df-bell-flash');
+        setTimeout(function(){ wrapper && wrapper.classList.remove('df-bell-flash'); }, 700);
+      });
+    }
+
+    /* Idle border pulse — after 8s idle */
+    function bumpIdle(){
+      if (!wrapper) return;
+      wrapper.classList.remove('df-idle');
+      clearTimeout(idleTimer);
+      if (CFG.reduce_motion) return;
+      idleTimer = setTimeout(function(){ wrapper && wrapper.classList.add('df-idle'); }, 8000);
+    }
+    if (typeof term.onLineFeed === 'function') term.onLineFeed(bumpIdle);
+    if (typeof term.onData === 'function') term.onData(bumpIdle);
+    bumpIdle();
+
+    /* Link provider — Minecraft-style IPv4:port with click-to-copy */
+    if (typeof term.registerLinkProvider === 'function') {
+      term.registerLinkProvider({
+        provideLinks: function(bufferLineNumber, callback){
+          try {
+            var line = term.buffer.active.getLine(bufferLineNumber - 1);
+            if (!line){ callback(undefined); return; }
+            var text = line.translateToString();
+            var links = [];
+            var re = /(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?/g;
+            var mm;
+            while ((mm = re.exec(text)) !== null) {
+              (function(ipVal, s, e){
+                links.push({
+                  range: { start: { x: s, y: bufferLineNumber }, end: { x: e, y: bufferLineNumber } },
+                  text: ipVal,
+                  activate: function(){
+                    try { navigator.clipboard && navigator.clipboard.writeText(ipVal); } catch(_){}
+                    if (wrapper){
+                      wrapper.setAttribute('data-df-toast', 'Copied ' + ipVal);
+                      wrapper.classList.add('df-toast');
+                      setTimeout(function(){ wrapper.classList.remove('df-toast'); }, 1400);
+                    }
+                  },
+                  hover: function(){}, leave: function(){}
+                });
+              })(mm[0], mm.index + 1, mm.index + mm[0].length);
+            }
+            callback(links);
+          } catch(e){ callback(undefined); }
+        }
+      });
+    }
+  }
+
+  /* xterm.js constructor patch */
   function patchXterm(x){
     if(!x || !x.Terminal || x.__dfPatched) return;
     var Orig = x.Terminal;
     var Patched = function(opts){
       opts = opts || {};
-      opts.theme = Object.assign({}, opts.theme, DF_XTERM);
+      opts.theme = Object.assign({}, opts.theme, THEME);
       opts.allowTransparency = true;
-      return new Orig(opts);
+      var t = new Orig(opts);
+      requestAnimationFrame(function(){ installHooks(t); });
+      return t;
     };
     Patched.prototype = Orig.prototype;
     try { Object.setPrototypeOf(Patched, Orig); } catch(e){}
@@ -154,10 +268,12 @@ HTML;
     protected function renderBody(): string
     {
         $jsSrc = asset('plugins/deepfield/deepfield.js');
+        $scan  = htmlspecialchars(config('deepfield.scanline_density', 'normal'), ENT_QUOTES, 'UTF-8');
 
         return <<<HTML
 <canvas id="df-nebula" aria-hidden="true"></canvas>
 <canvas id="df-starfield" aria-hidden="true"></canvas>
+<script>document.body.setAttribute('data-df-scan','{$scan}');</script>
 <script defer src="{$jsSrc}"></script>
 HTML;
     }
@@ -203,6 +319,29 @@ HTML;
                 ->label(trans('deepfield::strings.reduce_motion'))
                 ->helperText(trans('deepfield::strings.reduce_motion_help'))
                 ->inline(false),
+
+            Select::make('terminal_palette')
+                ->label(trans('deepfield::strings.terminal_palette'))
+                ->helperText(trans('deepfield::strings.terminal_palette_help'))
+                ->options([
+                    'cosmic'           => trans('deepfield::strings.palette_cosmic'),
+                    'minecraft'        => trans('deepfield::strings.palette_minecraft'),
+                    'solarized_aurora' => trans('deepfield::strings.palette_solarized'),
+                    'nord_aurora'      => trans('deepfield::strings.palette_nord'),
+                ])
+                ->native(false)
+                ->required(),
+
+            Select::make('scanline_density')
+                ->label(trans('deepfield::strings.scanline_density'))
+                ->helperText(trans('deepfield::strings.scanline_density_help'))
+                ->options([
+                    'fine'   => trans('deepfield::strings.scan_fine'),
+                    'normal' => trans('deepfield::strings.scan_normal'),
+                    'heavy'  => trans('deepfield::strings.scan_heavy'),
+                ])
+                ->native(false)
+                ->required(),
         ];
     }
 
@@ -214,11 +353,13 @@ HTML;
     public function saveSettings(array $data): void
     {
         $this->writeToEnvironment([
-            'DEEPFIELD_STAR_DENSITY'   => $data['star_density'] ?? 'medium',
-            'DEEPFIELD_NEBULA_ENABLED' => ($data['nebula_enabled'] ?? true) ? 'true' : 'false',
-            'DEEPFIELD_NEBULA_HUE'     => $data['nebula_hue'] ?? 'violet',
-            'DEEPFIELD_CRT_BLOOM'      => ($data['crt_bloom'] ?? true) ? 'true' : 'false',
-            'DEEPFIELD_REDUCE_MOTION'  => ($data['reduce_motion'] ?? false) ? 'true' : 'false',
+            'DEEPFIELD_STAR_DENSITY'      => $data['star_density'] ?? 'medium',
+            'DEEPFIELD_NEBULA_ENABLED'    => ($data['nebula_enabled'] ?? true) ? 'true' : 'false',
+            'DEEPFIELD_NEBULA_HUE'        => $data['nebula_hue'] ?? 'violet',
+            'DEEPFIELD_CRT_BLOOM'         => ($data['crt_bloom'] ?? true) ? 'true' : 'false',
+            'DEEPFIELD_REDUCE_MOTION'     => ($data['reduce_motion'] ?? false) ? 'true' : 'false',
+            'DEEPFIELD_TERMINAL_PALETTE'  => $data['terminal_palette'] ?? 'cosmic',
+            'DEEPFIELD_SCANLINE_DENSITY'  => $data['scanline_density'] ?? 'normal',
         ]);
 
         Notification::make()

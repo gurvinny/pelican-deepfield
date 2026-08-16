@@ -23,4 +23,17 @@ return [
 
     'reduce_motion'        => 'Reduce motion',
     'reduce_motion_help'   => 'Disable parallax and meteor animation. `prefers-reduced-motion` is always respected regardless of this setting.',
+
+    'terminal_palette'     => 'Terminal palette',
+    'terminal_palette_help'=> 'Color scheme used inside the in-server console (xterm.js). Cosmic matches the rest of the theme; Minecraft mimics vanilla § colors 1:1.',
+    'palette_cosmic'       => 'Cosmic (default)',
+    'palette_minecraft'    => 'Minecraft Vanilla',
+    'palette_solarized'    => 'Solarized Aurora',
+    'palette_nord'         => 'Nord Aurora',
+
+    'scanline_density'     => 'CRT scanline density',
+    'scanline_density_help'=> 'How prominent the console scanlines are. Only visible when CRT bloom is on.',
+    'scan_fine'            => 'Fine',
+    'scan_normal'          => 'Normal',
+    'scan_heavy'           => 'Heavy',
 ];
