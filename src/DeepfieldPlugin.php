@@ -131,11 +131,33 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         document.body.removeAttribute('data-df-auth');
       }
 
-      /* Server list — Pelican app-panel root (typically "/" or "/servers") */
-      if (p === '/' || p === '/servers' || p === '/app' || p === '/app/servers') {
+      /* Server list — Pelican app-panel root. Panel routes vary, so match broadly:
+         - "/"
+         - anything ending in "/servers"
+         - "/admin" / "/app" / "/dashboard" roots
+         - Also promote if the page has a server table and the URL contains "server". */
+      var isServerList = (
+        p === '/' || p === '' ||
+        /\/servers\/?$/.test(p) ||
+        /^\/(admin|app|dashboard)\/?$/.test(p) ||
+        /^\/(admin|app)\/servers\/?$/.test(p)
+      );
+      if (isServerList) {
         document.body.setAttribute('data-df-page','server-list');
       } else {
         document.body.removeAttribute('data-df-page');
+      }
+      /* Fallback promotion: if URL contains "server" and a servers table is present */
+      if (!isServerList && /server/i.test(p)) {
+        setTimeout(function(){
+          var hasServerTable = document.querySelector('.fi-ta-table tbody tr');
+          if (hasServerTable) document.body.setAttribute('data-df-page','server-list');
+        }, 200);
+      }
+      /* Debug: log the pathname once so we can tune matching if needed */
+      if (!window.__dfLogged) {
+        window.__dfLogged = true;
+        try { console.info('[Deepfield] route pathname:', location.pathname); } catch(_){}
       }
     }catch(e){}
   }

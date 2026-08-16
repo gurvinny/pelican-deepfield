@@ -426,9 +426,13 @@ tbody.fi-ta-body tr:hover {
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* Keep the overlay subtle — no heavy backdrop-blur, no near-opaque tint.
+   Heavy overlays make notification / small-modal opens feel like the whole
+   page has crashed. Filament closes on overlay click; we just help it feel light. */
 .fi-modal-close-overlay {
-    background: rgba(3, 4, 12, 0.72) !important;
-    backdrop-filter: blur(4px);
+    background: rgba(3, 4, 12, 0.45) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 /* ---- Inputs ---------------------------------------------------
