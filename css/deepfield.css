@@ -111,19 +111,33 @@ html { background: var(--df-bg-void) !important; }
     z-index: 2;
 }
 
-/* Ensure floating/portaled layers sit above everything */
+/* Ensure floating/portaled layers stack correctly — overlay BELOW panel
+   or the overlay traps all clicks and the modal becomes unusable. */
 .fi-topbar          { z-index: 30 !important; position: sticky; }
 .fi-sidebar         { z-index: 40 !important; }
-.fi-dropdown-panel,
+
+.fi-modal-close-overlay {
+    z-index: 9000 !important;
+    /* keep default pointer-events so Filament's click-to-close works */
+}
+
 .fi-modal,
 .fi-modal-window,
 .fi-slide-over,
-.fi-slide-over-window,
-.fi-modal-close-overlay,
-.fi-notifications,
+.fi-slide-over-window {
+    z-index: 9500 !important;
+    pointer-events: auto !important;
+}
+
+.fi-dropdown-panel,
 .fi-user-menu,
 [x-teleport],
 [data-floating-ui-portal] {
+    z-index: 9800 !important;
+    pointer-events: auto !important;
+}
+
+.fi-notifications {
     z-index: 9999 !important;
     pointer-events: auto !important;
 }
@@ -1089,3 +1103,67 @@ button[wire\\:loading]::after {
 /* Filament's default spinner icon inside buttons — kill it so our ring is the only one */
 .fi-btn .fi-icon-btn-loading-indicator,
 .fi-btn svg.animate-spin { display: none !important; }
+
+/* =============================================================
+ * Server power actions — Start / Restart / Stop pills
+ * ============================================================= */
+
+/* Target by wire:click OR by tabler icon class inside the button */
+.fi-btn[wire\:click*="power"]:has([class*="player-play"]),
+.fi-btn[wire\:click*="start"],
+.fi-btn:has(.fi-icon[class*="player-play"]),
+.fi-btn:has(svg[class*="player-play"]) {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.18), rgba(52, 211, 153, 0.06)) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(52, 211, 153, 0.55) !important;
+    box-shadow: 0 0 22px rgba(52, 211, 153, 0.35), inset 0 0 20px rgba(52, 211, 153, 0.06) !important;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.55);
+    font-weight: 600;
+    padding: 0.55rem 1.1rem !important;
+    letter-spacing: 0.02em;
+}
+
+.fi-btn[wire\:click*="restart"],
+.fi-btn:has(.fi-icon[class*="refresh"]),
+.fi-btn:has(svg[class*="refresh"]) {
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(250, 204, 21, 0.06)) !important;
+    color: #facc15 !important;
+    border: 1px solid rgba(250, 204, 21, 0.55) !important;
+    box-shadow: 0 0 22px rgba(250, 204, 21, 0.35), inset 0 0 20px rgba(250, 204, 21, 0.06) !important;
+    text-shadow: 0 0 8px rgba(250, 204, 21, 0.55);
+    font-weight: 600;
+    padding: 0.55rem 1.1rem !important;
+    letter-spacing: 0.02em;
+}
+
+.fi-btn[wire\:click*="stop"],
+.fi-btn[wire\:click*="kill"],
+.fi-btn:has(.fi-icon[class*="player-stop"]),
+.fi-btn:has(svg[class*="player-stop"]) {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), rgba(248, 113, 113, 0.06)) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(248, 113, 113, 0.55) !important;
+    box-shadow: 0 0 22px rgba(248, 113, 113, 0.35), inset 0 0 20px rgba(248, 113, 113, 0.06) !important;
+    text-shadow: 0 0 8px rgba(248, 113, 113, 0.55);
+    font-weight: 600;
+    padding: 0.55rem 1.1rem !important;
+    letter-spacing: 0.02em;
+}
+
+/* Hover state — lift + brighter glow, works for all three */
+.fi-btn[wire\:click*="start"]:hover,
+.fi-btn[wire\:click*="restart"]:hover,
+.fi-btn[wire\:click*="stop"]:hover,
+.fi-btn[wire\:click*="kill"]:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.15) saturate(1.1);
+}
+
+/* Icon inside the pill — glow to match */
+.fi-btn[wire\:click*="start"] svg,
+.fi-btn[wire\:click*="restart"] svg,
+.fi-btn[wire\:click*="stop"] svg,
+.fi-btn[wire\:click*="kill"] svg {
+    filter: drop-shadow(0 0 4px currentColor);
+    stroke-width: 2px;
+}
