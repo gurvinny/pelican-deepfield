@@ -69,7 +69,7 @@ Values are persisted to `.env` (`DEEPFIELD_*`) so they survive updates.
 
 ## Screenshots
 
-*Coming with v1.0.0 release.*
+*Coming soon.*
 
 <!-- ![Dashboard](screenshots/dashboard.png) -->
 <!-- ![Server list](screenshots/server-list.png) -->
@@ -101,19 +101,17 @@ If Pelican Panel bumps to a new major Filament version, expect a compat patch �
 
 ## Roadmap
 
-- [ ] `screenshots/` for v1.0.0 launch
+- [ ] Screenshots
 - [ ] Optional lightweight light-mode variant (dawn cosmic — cream bg, indigo ink)
 - [ ] Extra nebula presets (aurora / ember / abyss)
 - [ ] Per-user preference overrides (currently server-wide via `.env`)
-- [ ] Ship on the Pelican Hub marketplace
+- [ ] Publish on the Pelican Hub marketplace
 
 ---
 
 ## Credits
 
-Made by **Gurvin Singh** — [@gurvinny](https://github.com/gurvinny).
-
-Inspired by the atmospheric feel of `JoanFo1456/starrynight`; the implementation, colorway, glass system, typography stack, and console treatment are original.
+Made by [@gurvinny](https://github.com/gurvinny).
 
 Fonts: **Space Grotesk** (Florian Karsten), **JetBrains Mono** (JetBrains), **Orbitron** (Matt McInerney / The League of Moveable Type) — all SIL Open Font License 1.1.
 
