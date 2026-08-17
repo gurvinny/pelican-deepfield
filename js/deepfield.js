@@ -366,8 +366,53 @@
         badges.forEach(b => obs.observe(b, { childList: true, characterData: true, subtree: true }));
     }
 
+    // ---- Narrow-viewport sidebar toggle — Filament's built-in button only
+    // OPENS the sidebar (close is handled by tap-outside on an overlay).
+    // Make it toggle both ways so the button visibly closes what it opened.
+    function wireSidebarToggle() {
+        const btn = document.querySelector('.fi-layout-sidebar-toggle-btn');
+        if (!btn || btn.__dfWired) return;
+        btn.__dfWired = true;
+        btn.addEventListener('click', () => {
+            // Alpine store is exposed on `window.Alpine.store('sidebar')`
+            try {
+                const store = window.Alpine?.store?.('sidebar');
+                if (store && store.isOpen) {
+                    // Close on next tick so we don't fight Alpine's own open() call
+                    requestAnimationFrame(() => store.close());
+                }
+            } catch (e) {}
+        }, { capture: true });
+    }
+
+    // ---- Terminal auto-scroll — always keep the newest log line pinned
+    // to the bottom. xterm.js has scrollToBottom() but Pelican doesn't
+    // always call it when new data lands into a fixed-height container.
+    function wireTerminalAutoScroll() {
+        const wrap = document.querySelector('#terminal');
+        if (!wrap || wrap.__dfScrollWired) return;
+        const viewport = wrap.querySelector('.xterm-viewport');
+        if (!viewport) { setTimeout(wireTerminalAutoScroll, 300); return; }
+        wrap.__dfScrollWired = true;
+        let userScrolledUp = false;
+        // Track whether user manually scrolled away from bottom
+        viewport.addEventListener('scroll', () => {
+            const gap = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+            userScrolledUp = gap > 40;   // 40px buffer for "at bottom"
+        }, { passive: true });
+        // On any DOM mutation inside the terminal (xterm renders new rows),
+        // scroll to bottom UNLESS the user deliberately scrolled up.
+        const obs = new MutationObserver(() => {
+            if (userScrolledUp) return;
+            viewport.scrollTop = viewport.scrollHeight;
+        });
+        obs.observe(wrap, { childList: true, subtree: true, characterData: true });
+        // Initial pin
+        viewport.scrollTop = viewport.scrollHeight;
+    }
+
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); wireSidebarToggle(); wireTerminalAutoScroll(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);

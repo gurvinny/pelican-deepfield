@@ -332,11 +332,27 @@ html { color-scheme: dark; }
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 225, 255, 0.12) !important;
     color: var(--df-ink) !important;
     z-index: 60 !important;
-    position: relative;
+    position: fixed !important;
+    top: 14px !important;
+    left: 14px !important;
+    transition: left 260ms var(--df-ease-out), transform 260ms var(--df-ease-out) !important;
 }
 .fi-layout-sidebar-toggle-btn:hover {
     border-color: rgba(56, 225, 255, 0.55) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 24px rgba(56, 225, 255, 0.30) !important;
+}
+/* When sidebar is open on narrow, slide the toggle to the sidebar's
+   right edge and rotate its icon so it reads as a "close" button —
+   no more overlap with the "TooFly Game Servers" branding. */
+@media (max-width: 1023.98px) {
+    body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn,
+    body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn-ctn > button {
+        left: 274px !important;
+    }
+    body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn svg {
+        transform: rotate(180deg);
+        transition: transform 260ms var(--df-ease-out);
+    }
 }
 .fi-sidebar-database-notifications-btn {
     position: absolute !important;
@@ -938,6 +954,10 @@ input#send-command {
 
 /* CRT overlay — sit ABOVE xterm's WebGL canvas layers (they use z-index 0–4).
    Scanline density controlled by body[data-df-scan="fine|normal|heavy"]. */
+/* CRT scanline overlay — softened significantly to preserve terminal
+   text readability. Previous opacities (0.06/0.13/0.22) were dense
+   enough to mush log lines together. New values give the CRT texture
+   without fighting the text. */
 body[data-df-crt="1"] #terminal::after {
     content: '';
     position: absolute;
@@ -946,25 +966,26 @@ body[data-df-crt="1"] #terminal::after {
     animation: df-scan 8s linear infinite;
     z-index: 999;
     border-radius: var(--df-radius-lg);
-    opacity: 0.9;
+    opacity: 0.55;
+    mix-blend-mode: overlay;
 }
 
 body[data-df-crt="1"][data-df-scan="fine"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 1px,
-        rgba(94,234,212,0.06) 2px, rgba(0,0,0,0) 3px);
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+        rgba(94,234,212,0.025) 3px, rgba(0,0,0,0) 4px);
 }
 body[data-df-crt="1"][data-df-scan="normal"] #terminal::after,
 body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(94,234,212,0.13) 3px, rgba(0,0,0,0) 4px);
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
+        rgba(94,234,212,0.045) 4px, rgba(0,0,0,0) 5px);
 }
 body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(94,234,212,0.22) 3px, rgba(0,0,0,0) 5px);
-    opacity: 1;
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
+        rgba(94,234,212,0.09) 4px, rgba(0,0,0,0) 6px);
+    opacity: 0.75;
 }
 
 /* xterm canvases are drawn absolutely; make sure they don't establish a stacking context that traps our overlay */
