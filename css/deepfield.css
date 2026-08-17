@@ -331,6 +331,14 @@ aside.fi-sidebar,
     min-width: 16px !important;
 }
 
+/* When the sidebar is collapsed (no `fi-sidebar-open` class), the floated
+   notif icon collides with Filament's expand-sidebar button in the top-right
+   of the narrow sidebar. Hide notif in that state — hovering the sidebar
+   auto-expands it, which brings the icon back. */
+.fi-sidebar:not(.fi-sidebar-open) .fi-sidebar-database-notifications-btn {
+    display: none !important;
+}
+
 /* Kill Filament's default body gradient/tile if any */
 body::before,
 body::after { content: none !important; }
