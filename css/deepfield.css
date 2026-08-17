@@ -116,42 +116,104 @@ html { background: var(--df-bg-void) !important; }
 .fi-topbar          { z-index: 30 !important; position: sticky; }
 .fi-sidebar         { z-index: 40 !important; }
 
-/* Overlay must never trap clicks. Filament's default click-to-close is a
-   convenience; we prefer that dropdown/notification panels remain usable
-   over the ability to click empty space to close. Escape still closes. */
-.fi-modal-close-overlay {
-    z-index: 9000 !important;
-    pointer-events: none !important;
-}
-
-/* Anything that follows an overlay in the DOM (its sibling — usually the
-   panel or modal window itself) must sit above it. */
-.fi-modal-close-overlay ~ *,
-.fi-modal-close-overlay + *,
-[class*="modal-close-overlay"] ~ * {
-    z-index: 9500 !important;
+/* Overlay stays click-to-close (Filament default). Keep it visually light
+   and make absolutely sure every panel/dropdown/notification sits ABOVE it
+   with pointer-events on. */
+.fi-modal-close-overlay,
+[class*="modal-close-overlay"],
+.fi-modal-overlay {
+    z-index: 40 !important;
     pointer-events: auto !important;
 }
 
+/* Modals, slide-overs, panels: hard-boost above overlay */
 .fi-modal,
 .fi-modal-window,
+.fi-modal-content,
 .fi-slide-over,
-.fi-slide-over-window {
+.fi-slide-over-window,
+[class*="modal-window"],
+[class*="slide-over"] {
     z-index: 9500 !important;
     pointer-events: auto !important;
+    position: relative;
 }
 
+/* Dropdowns, user menu, floating portals */
 .fi-dropdown-panel,
 .fi-user-menu,
+.fi-dropdown,
 [x-teleport],
-[data-floating-ui-portal] {
+[data-floating-ui-portal],
+[data-radix-popper-content-wrapper] {
     z-index: 9800 !important;
     pointer-events: auto !important;
 }
 
-.fi-notifications {
-    z-index: 9999 !important;
+/* Notifications — Filament v3 uses .fi-no or .fi-notifications wrappers.
+   Cover both plus generic filament-notifications class. */
+.fi-notifications,
+.fi-no,
+.fi-no-notifications,
+.filament-notifications,
+[class*="notifications"] {
+    z-index: 10000 !important;
     pointer-events: auto !important;
+    position: relative;
+}
+.fi-notifications *,
+.fi-no *,
+.filament-notifications * {
+    pointer-events: auto !important;
+}
+
+/* =============================================================
+ * Card grids — make cards fluidly fill the available width so a
+ * single server card (or a couple dashboard widgets) doesn't sit
+ * as a lonely pillar against acres of empty space. auto-fill lets
+ * one card expand to 100% and multiple cards flow into columns. */
+.fi-grid.fi-sc,
+.fi-grid[class*="fi-sc-has"],
+.fi-sc-ctn > .fi-grid,
+main .fi-grid:not([class*="fi-fo"]) {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
+    gap: 1rem !important;
+}
+
+.fi-widgets,
+.fi-wi-stats-overview-stats-ctn {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+    gap: 1rem !important;
+}
+
+/* Individual server cards / widgets shouldn't have their own fixed width */
+.fi-grid > *,
+.fi-sc-ctn > .fi-grid > *,
+.fi-widgets > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* =============================================================
+ * Width safety — never let any theme rule (or an auth-hero rule
+ * mis-firing) squeeze the main page column. Force full-width fill
+ * on every page container Filament ships. Scoped OFF for real auth. */
+body:not([data-df-auth="1"]) .fi-page,
+body:not([data-df-auth="1"]) .fi-page-content,
+body:not([data-df-auth="1"]) .fi-page-content-ctn,
+body:not([data-df-auth="1"]) .fi-main,
+body:not([data-df-auth="1"]) .fi-main-ctn,
+body:not([data-df-auth="1"]) .fi-layout main,
+body:not([data-df-auth="1"]) .fi-simple-page,
+body:not([data-df-auth="1"]) .fi-simple-main,
+body:not([data-df-auth="1"]) .fi-simple-main-ctn {
+    max-width: none !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }
 
 /* ---- Body / typography reset --------------------------------- */
