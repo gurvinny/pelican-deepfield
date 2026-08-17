@@ -5,7 +5,7 @@
 **A deep-cosmic theme plugin for [Pelican Panel](https://pelican.dev).**
 *Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.*
 
-![Version](https://img.shields.io/badge/version-1.0.0-a78bfa?style=for-the-badge&labelColor=0b0a1e)
+![Version](https://img.shields.io/badge/version-1.0.4-a78bfa?style=for-the-badge&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
@@ -23,8 +23,9 @@ Deepfield replaces Pelican Panel's default look with a dark-only, cosmic-atmosph
 - **Aurora accent gradient** (cyan → teal → violet) on primary buttons, active nav, focus rings, and status badges.
 - **Glassmorphism where it earns its keep** — sidebar and topbar float as translucent slabs, but with heavy tint + strong blur so text always wins. Modals stay near-opaque. Nothing feels washed out.
 - **Premium typography** — Orbitron for display H1s, Space Grotesk for the interface, JetBrains Mono for every stretch of code. All self-hosted (no CDN or Google Fonts round-trip).
-- **Terminal-first server console** with optional CRT bloom and subtle scanlines. Toggle it off during incidents.
-- **Filament-native settings page** — starfield density, nebula on/off, hue, CRT bloom, reduce-motion. Written straight to `.env`, no database migrations.
+- **Terminal-first server console** with optional CRT bloom, subtle scanlines, and a monitor-style top-bar chrome. The terminal is height-capped and scrolls internally — busy servers don't push the command bar off-screen.
+- **Filament-native settings page** — starfield density, nebula on/off, hue, CRT bloom, terminal palette (cosmic · Minecraft Vanilla · Solarized Aurora · Nord Aurora), scanline density, audio cues, reduce-motion. Written straight to `.env`, no database migrations.
+- **Responsive** — sidebar collapses cleanly on narrow viewports (side-by-side with a game window, mobile, whatever). Contrast-boosted hamburger button on the topbar. Sticky sidebar on desktop so it stays visible while the console scrolls.
 - **Motion respects you** — `prefers-reduced-motion` is honored automatically; there is also an explicit user toggle.
 
 Skins **all three Filament panels**: admin, app (server list), and server (client console).

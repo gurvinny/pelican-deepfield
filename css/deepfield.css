@@ -283,17 +283,60 @@ html { color-scheme: dark; }
    and the popup's height inevitably overlaps this bar. Float the button
    as a small icon-only button in the top-right corner of the sidebar
    instead. Frees the footer, keeps the badge count visible. */
-aside.fi-sidebar,
-.fi-sidebar {
-    /* sticky (not relative) so the sidebar stays visible when the console
-       output grows past the viewport. sticky still establishes a containing
-       block for the floating notifications button (position: absolute). */
-    position: sticky !important;
-    top: 0 !important;
-    align-self: flex-start !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow-y: auto !important;
+/* Sidebar positioning:
+   - Desktop (≥lg 1024px): sticky so it stays visible when content scrolls,
+     and it's a containing block for the floating notifications button.
+   - Narrow (<lg): let Filament's off-canvas behavior take over. Sticky
+     here would still reserve 320px in the flex row and squeeze main
+     content to a sliver. */
+@media (min-width: 1024px) {
+    aside.fi-sidebar,
+    .fi-sidebar {
+        position: sticky !important;
+        top: 0 !important;
+        align-self: flex-start !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow-y: auto !important;
+    }
+}
+/* On narrow viewports, ensure sidebar doesn't occupy layout space when
+   off-canvas — Filament translates it via transform but still counts its
+   width in the flex row. Force flex:0 and 0 width so main takes 100%. */
+@media (max-width: 1023.98px) {
+    aside.fi-sidebar,
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        height: 100vh !important;
+        flex: 0 0 auto !important;
+        width: 320px !important;
+        z-index: 50 !important;
+    }
+    /* Main content reclaims full viewport when sidebar is off-canvas */
+    .fi-main-ctn,
+    .fi-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* Sidebar toggle button (hamburger on narrow) — starfield-transparent
+   without chrome is invisible. Give it glass so users can find it. */
+.fi-layout-sidebar-toggle-btn,
+.fi-layout-sidebar-toggle-btn-ctn > button {
+    background: var(--df-glass-card) !important;
+    border: 1px solid var(--df-glass-border-strong) !important;
+    border-radius: var(--df-radius-md) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 225, 255, 0.12) !important;
+    color: var(--df-ink) !important;
+    z-index: 60 !important;
+    position: relative;
+}
+.fi-layout-sidebar-toggle-btn:hover {
+    border-color: rgba(56, 225, 255, 0.55) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 24px rgba(56, 225, 255, 0.30) !important;
 }
 .fi-sidebar-database-notifications-btn {
     position: absolute !important;
