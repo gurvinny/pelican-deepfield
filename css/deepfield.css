@@ -76,10 +76,12 @@
     --df-status-stopping-glow: 0 0 12px rgba(251, 146, 60, 0.55);
     --df-status-offline-glow:  0 0 12px rgba(248, 113, 113, 0.55);
 
-    /* Radii + easing */
-    --df-radius-sm: 6px;
-    --df-radius-md: 10px;
-    --df-radius-lg: 16px;
+    /* Radii + easing — tighter, universal.
+       Every rounded surface (cards, sections, modals, inputs, buttons, terminal)
+       pulls from ONE of these three tokens. Never hardcode radii elsewhere. */
+    --df-radius-sm: 4px;
+    --df-radius-md: 6px;
+    --df-radius-lg: 8px;
     --df-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -265,10 +267,16 @@ body {
     font-feature-settings: 'ss01', 'cv11';
 }
 
-/* Force dark; hide theme switcher */
+/* Force dark; hide every theme switcher UI (Deepfield is dark-only).
+   Also removes the switcher row from user-menu popups, which frees up
+   ~55px of vertical space — enough that the sidebar user-menu popup
+   fits above its trigger without overlapping the notifications button. */
 html { color-scheme: dark; }
 [aria-label*="Toggle theme" i],
-[aria-label*="theme mode" i] {
+[aria-label*="theme mode" i],
+.fi-theme-switcher,
+.fi-theme-switcher-btn,
+[role="group"]:has(.fi-theme-switcher-btn) {
     display: none !important;
 }
 
@@ -557,7 +565,14 @@ tbody.fi-ta-body tr:hover {
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-md) !important;
     transition: box-shadow 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
-    overflow: hidden;
+    /* Cannot use overflow: hidden — it clips the select's floating options
+       dropdown. Rely on border-radius alone; icon-prefix children inherit
+       the rounded corners visually via the wrapper's background. */
+}
+
+/* Filament also wraps selects in .fi-fo-select — same clipping rule applies */
+.fi-fo-select {
+    overflow: visible !important;
 }
 
 .fi-input,
@@ -740,27 +755,51 @@ a:hover, .fi-link:hover {
         0 20px 40px -20px rgba(0, 0, 0, 0.6);
 }
 
-/* Terminal chrome — CRT-style monitor top bar */
+/* Terminal chrome — CRT-style monitor top bar. Extra height + roomy
+   letter-spacing so the label reads deliberate, not cramped. */
+#terminal {
+    padding: 2.25rem 0.85rem 0.85rem !important;
+}
 #terminal::before {
-    content: '● ● ●   SERVER  CONSOLE';
+    content: '● ● ●         SERVER  CONSOLE';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 26px;
+    height: 34px;
     display: flex;
     align-items: center;
-    padding: 0 1rem;
+    padding: 0 1.25rem;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.35em;
-    color: rgba(94, 234, 212, 0.65);
-    background: linear-gradient(180deg, rgba(11, 10, 30, 0.92), rgba(11, 10, 30, 0.5));
+    font-size: 0.68rem;
+    letter-spacing: 0.42em;
+    color: rgba(94, 234, 212, 0.72);
+    background: linear-gradient(180deg, rgba(11, 10, 30, 0.94), rgba(11, 10, 30, 0.55));
     border-bottom: 1px solid var(--df-glass-border);
     border-top-left-radius: var(--df-radius-lg);
     border-top-right-radius: var(--df-radius-lg);
     z-index: 5;
     pointer-events: none;
+}
+
+/* Command input strip — give it breathing room from the terminal above */
+#terminal + *,
+#terminal ~ #send-command,
+#terminal ~ div:has(#send-command),
+form:has(#send-command) {
+    margin-top: 0.75rem !important;
+}
+#send-command,
+input#send-command {
+    padding: 0.75rem 1rem !important;
+    border: 1px solid var(--df-glass-border) !important;
+    border-radius: var(--df-radius-md) !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.01em;
+}
+#send-command:focus {
+    border-color: rgba(56, 225, 255, 0.55) !important;
+    box-shadow: var(--df-glow-focus) !important;
 }
 
 /* Ensure xterm's own DOM/canvas layers sit flush and transparent so #terminal bg shows */
