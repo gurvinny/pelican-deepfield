@@ -168,33 +168,25 @@ html { background: var(--df-bg-void) !important; }
 }
 
 /* =============================================================
- * Card grids — make cards fluidly fill the available width so a
- * single server card (or a couple dashboard widgets) doesn't sit
- * as a lonely pillar against acres of empty space. auto-fill lets
- * one card expand to 100% and multiple cards flow into columns. */
-.fi-grid.fi-sc,
-.fi-grid[class*="fi-sc-has"],
-.fi-sc-ctn > .fi-grid,
-main .fi-grid:not([class*="fi-fo"]) {
+ * Card grids — Filament schema `.fi-grid` is used for BOTH nested
+ * layout wrappers AND server-card grids. Only target the innermost
+ * record grid (children of .fi-ta-ctn) to make single cards fill
+ * the row instead of shrinking to 320px. Leaves widget grids and
+ * outer schema grids alone. */
+.fi-ta-ctn .fi-ta-content-grid,
+.fi-ta-ctn .fi-ta-content-grid.md\:fi-grid-cols {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
     gap: 1rem !important;
 }
 
-.fi-widgets,
-.fi-wi-stats-overview-stats-ctn {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
-    gap: 1rem !important;
-}
-
-/* Individual server cards / widgets shouldn't have their own fixed width */
-.fi-grid > *,
-.fi-sc-ctn > .fi-grid > *,
-.fi-widgets > * {
+/* Table container should always fill its parent — Filament renders it
+   as display:flex which shrinks to content width in a grid parent. */
+.fi-ta-ctn,
+.fi-ta {
     width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
 }
 
 /* =============================================================
