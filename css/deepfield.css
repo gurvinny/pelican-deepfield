@@ -390,8 +390,9 @@ main.fi-main {
     box-shadow:
         0 1px 0 rgba(255, 255, 255, 0.04) inset,
         0 10px 30px -12px rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    /* NOTE: no backdrop-filter here — it creates a new containing block
+       for `position: fixed` descendants, which breaks Alpine floating-ui
+       dropdown positioning (panels attach to the card, not the viewport). */
 }
 
 /* ---- Grid spacing — Filament packs everything with zero gap by default.
