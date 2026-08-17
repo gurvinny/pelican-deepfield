@@ -297,7 +297,17 @@ html { color-scheme: dark; }
         align-self: flex-start !important;
         height: 100vh !important;
         max-height: 100vh !important;
-        overflow-y: auto !important;
+        /* overflow: visible so dropdown popups (profile menu) rendered
+           inside the sidebar can extend beyond the sidebar's right edge
+           into the main content area. Setting overflow-y auto forced
+           overflow-x auto too, which clipped popups horizontally. */
+        overflow: visible !important;
+    }
+    /* If the nav list itself gets too tall, let IT scroll internally
+       rather than the whole sidebar */
+    .fi-sidebar .fi-sidebar-nav {
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
     }
 }
 /* On narrow viewports, ensure sidebar doesn't occupy layout space when
