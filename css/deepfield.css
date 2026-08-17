@@ -285,7 +285,15 @@ html { color-scheme: dark; }
    instead. Frees the footer, keeps the badge count visible. */
 aside.fi-sidebar,
 .fi-sidebar {
-    position: relative !important;
+    /* sticky (not relative) so the sidebar stays visible when the console
+       output grows past the viewport. sticky still establishes a containing
+       block for the floating notifications button (position: absolute). */
+    position: sticky !important;
+    top: 0 !important;
+    align-self: flex-start !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
 }
 .fi-sidebar-database-notifications-btn {
     position: absolute !important;
