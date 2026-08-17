@@ -267,10 +267,7 @@ body {
     font-feature-settings: 'ss01', 'cv11';
 }
 
-/* Force dark; hide every theme switcher UI (Deepfield is dark-only).
-   Also removes the switcher row from user-menu popups, which frees up
-   ~55px of vertical space — enough that the sidebar user-menu popup
-   fits above its trigger without overlapping the notifications button. */
+/* Force dark; hide every theme switcher UI (Deepfield is dark-only). */
 html { color-scheme: dark; }
 [aria-label*="Toggle theme" i],
 [aria-label*="theme mode" i],
@@ -278,6 +275,52 @@ html { color-scheme: dark; }
 .fi-theme-switcher-btn,
 [role="group"]:has(.fi-theme-switcher-btn) {
     display: none !important;
+}
+
+/* Sidebar notifications button — Filament's default puts a full-width
+   "Notifications" bar in the sidebar footer, directly above the profile
+   trigger. Alpine x-float opens the user-menu popup above the trigger,
+   and the popup's height inevitably overlaps this bar. Float the button
+   as a small icon-only button in the top-right corner of the sidebar
+   instead. Frees the footer, keeps the badge count visible. */
+aside.fi-sidebar,
+.fi-sidebar {
+    position: relative !important;
+}
+.fi-sidebar-database-notifications-btn {
+    position: absolute !important;
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    left: auto !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    border-radius: var(--df-radius-md) !important;
+    background: rgba(11, 10, 30, 0.85) !important;
+    border: 1px solid var(--df-glass-border) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 60 !important;
+    overflow: visible !important;
+}
+.fi-sidebar-database-notifications-btn > span:not(:has(svg)):not(.fi-badge),
+.fi-sidebar-database-notifications-btn > *:not(svg):not(.fi-badge):not([class*="badge"]) {
+    display: none !important;
+}
+.fi-sidebar-database-notifications-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+.fi-sidebar-database-notifications-btn .fi-badge,
+.fi-sidebar-database-notifications-btn [class*="badge"] {
+    position: absolute !important;
+    top: -6px !important;
+    right: -6px !important;
+    font-size: 0.6rem !important;
+    padding: 1px 5px !important;
+    min-width: 16px !important;
 }
 
 /* Kill Filament's default body gradient/tile if any */
