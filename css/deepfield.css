@@ -875,14 +875,22 @@ a:hover, .fi-link:hover {
 }
 
 /* Terminal chrome — CRT monitor top bar.
-   Height is measured from xterm's own .xterm-screen at runtime (JS)
-   and applied inline. No fixed CSS height so we don't fight xterm's
-   row-count math. */
+   Fixed height with generous bottom padding so xterm's last rendered
+   row is never clipped even if its row-height doesn't divide evenly
+   into the container. .xterm-viewport handles internal scroll. */
 #terminal {
-    padding: 2.25rem 0.85rem 0.85rem !important;
+    padding: 2.25rem 0.85rem 2rem !important;
+    height: min(58vh, 560px) !important;
+    min-height: 320px !important;
+    overflow: hidden !important;
 }
-/* Don't override xterm's own layout — let it size itself */
+#terminal .xterm,
+#terminal .terminal.xterm {
+    height: 100% !important;
+    max-height: 100% !important;
+}
 #terminal .xterm-viewport {
+    max-height: 100% !important;
     overflow-y: auto !important;
 }
 #terminal::before {
