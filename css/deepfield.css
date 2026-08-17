@@ -874,25 +874,14 @@ a:hover, .fi-link:hover {
         0 20px 40px -20px rgba(0, 0, 0, 0.6);
 }
 
-/* Terminal chrome — CRT-style monitor top bar.
-   Cap max-height only; let xterm size itself to a whole-row count and
-   pop the wrapper to match. Forcing a fixed height clips the bottom
-   row(s) because xterm renders to N rows but the viewport gets sized
-   to a non-multiple of the row-height, hiding the last partial row. */
+/* Terminal chrome — CRT monitor top bar.
+   Height is measured from xterm's own .xterm-screen at runtime (JS)
+   and applied inline. No fixed CSS height so we don't fight xterm's
+   row-count math. */
 #terminal {
     padding: 2.25rem 0.85rem 0.85rem !important;
-    max-height: min(65vh, 620px) !important;
-    min-height: 320px !important;
-    overflow: hidden !important;
 }
-
-/* Let xterm decide its own height (row-aligned). The wrapper's overflow
-   caps growth; the viewport handles internal scroll for buffer history. */
-#terminal .xterm,
-#terminal .terminal.xterm {
-    height: auto !important;
-    max-height: 100% !important;
-}
+/* Don't override xterm's own layout — let it size itself */
 #terminal .xterm-viewport {
     overflow-y: auto !important;
 }
@@ -1456,8 +1445,12 @@ button[wire\\:loading]::after {
 
 .fi-btn[wire\:click*="stop"],
 .fi-btn[wire\:click*="kill"],
+.fi-btn[wire\:click*="delete"],
+.fi-btn[wire\:click*="Delete"],
 .fi-btn:has(.fi-icon[class*="player-stop"]),
-.fi-btn:has(svg[class*="player-stop"]) {
+.fi-btn:has(svg[class*="player-stop"]),
+.fi-btn:has(.fi-icon[class*="trash"]),
+.fi-btn:has(svg[class*="trash"]) {
     background: linear-gradient(135deg, rgba(248, 113, 113, 0.32), rgba(248, 113, 113, 0.12)) !important;
     color: #f87171 !important;
     border: 1px solid rgba(248, 113, 113, 0.55) !important;
@@ -1468,11 +1461,13 @@ button[wire\\:loading]::after {
     letter-spacing: 0.02em;
 }
 
-/* Hover state — lift + brighter glow, works for all three */
+/* Hover state — lift + brighter glow */
 .fi-btn[wire\:click*="start"]:hover,
 .fi-btn[wire\:click*="restart"]:hover,
 .fi-btn[wire\:click*="stop"]:hover,
-.fi-btn[wire\:click*="kill"]:hover {
+.fi-btn[wire\:click*="kill"]:hover,
+.fi-btn[wire\:click*="delete"]:hover,
+.fi-btn[wire\:click*="Delete"]:hover {
     transform: translateY(-1px);
     filter: brightness(1.15) saturate(1.1);
 }
@@ -1481,7 +1476,9 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="start"] svg,
 .fi-btn[wire\:click*="restart"] svg,
 .fi-btn[wire\:click*="stop"] svg,
-.fi-btn[wire\:click*="kill"] svg {
+.fi-btn[wire\:click*="kill"] svg,
+.fi-btn[wire\:click*="delete"] svg,
+.fi-btn[wire\:click*="Delete"] svg {
     filter: drop-shadow(0 0 4px currentColor);
     stroke-width: 2px;
 }

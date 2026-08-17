@@ -385,6 +385,29 @@
         }, { capture: true });
     }
 
+    // ---- Terminal sizing — mirror #terminal's height to xterm's own
+    // .xterm-screen height so the wrapper matches xterm's row-aligned
+    // dimensions exactly. Prevents the last-row clip that happens when
+    // CSS forces a fixed height that isn't a clean multiple of row-height.
+    function pinTerminalHeight() {
+        const wrap = document.querySelector('#terminal');
+        if (!wrap || wrap.__dfSizePinned) return;
+        const screen = wrap.querySelector('.xterm-screen');
+        if (!screen) { setTimeout(pinTerminalHeight, 200); return; }
+        wrap.__dfSizePinned = true;
+        // padding-top (2.25rem = 36px) accounts for the CRT top-bar chrome
+        // padding-bottom (0.85rem = ~14px)
+        const CHROME = 50;
+        const applyHeight = () => {
+            const h = Math.round(screen.getBoundingClientRect().height);
+            if (h > 0) wrap.style.setProperty('height', (h + CHROME) + 'px', 'important');
+        };
+        applyHeight();
+        // React to xterm resizes (font load, row count changes, viewport)
+        if (window.ResizeObserver) new ResizeObserver(applyHeight).observe(screen);
+        window.addEventListener('resize', applyHeight, { passive: true });
+    }
+
     // ---- Terminal auto-scroll + refit — always keep the newest log line
     // pinned to the bottom AND force xterm.js to recompute row count for
     // our fixed-height container. Pelican initializes xterm before our
@@ -425,7 +448,7 @@
     }
 
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); wireSidebarToggle(); wireTerminalAutoScroll(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); wireSidebarToggle(); pinTerminalHeight(); wireTerminalAutoScroll(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);
