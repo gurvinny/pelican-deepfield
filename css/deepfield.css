@@ -341,13 +341,14 @@ html { color-scheme: dark; }
     border-color: rgba(56, 225, 255, 0.55) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 24px rgba(56, 225, 255, 0.30) !important;
 }
-/* When sidebar is open on narrow, slide the toggle to the sidebar's
-   right edge and rotate its icon so it reads as a "close" button —
-   no more overlap with the "TooFly Game Servers" branding. */
+/* When sidebar is open on narrow, park the toggle JUST OUTSIDE the
+   sidebar's right edge (sidebar is 320px wide) so it doesn't overlap
+   the branding OR the top-right notifications bell. Icon flips to
+   read as a "close" button. */
 @media (max-width: 1023.98px) {
     body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn,
     body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn-ctn > button {
-        left: 274px !important;
+        left: 328px !important;
     }
     body:has(.fi-sidebar.fi-sidebar-open) .fi-layout-sidebar-toggle-btn svg {
         transform: rotate(180deg);
@@ -873,26 +874,26 @@ a:hover, .fi-link:hover {
         0 20px 40px -20px rgba(0, 0, 0, 0.6);
 }
 
-/* Terminal chrome — CRT-style monitor top bar. Extra height + roomy
-   letter-spacing so the label reads deliberate, not cramped.
-   Fixed height with internal xterm scrolling: caps growth so long
-   log volume doesn't stretch the page. */
+/* Terminal chrome — CRT-style monitor top bar.
+   Cap max-height only; let xterm size itself to a whole-row count and
+   pop the wrapper to match. Forcing a fixed height clips the bottom
+   row(s) because xterm renders to N rows but the viewport gets sized
+   to a non-multiple of the row-height, hiding the last partial row. */
 #terminal {
     padding: 2.25rem 0.85rem 0.85rem !important;
-    height: min(58vh, 560px) !important;
-    max-height: min(58vh, 560px) !important;
+    max-height: min(65vh, 620px) !important;
     min-height: 320px !important;
+    overflow: hidden !important;
 }
 
-/* xterm's own viewport handles internal scrolling — force it to fill the
-   fixed wrapper and NEVER exceed it. */
+/* Let xterm decide its own height (row-aligned). The wrapper's overflow
+   caps growth; the viewport handles internal scroll for buffer history. */
 #terminal .xterm,
 #terminal .terminal.xterm {
-    height: 100% !important;
+    height: auto !important;
     max-height: 100% !important;
 }
 #terminal .xterm-viewport {
-    max-height: 100% !important;
     overflow-y: auto !important;
 }
 #terminal::before {

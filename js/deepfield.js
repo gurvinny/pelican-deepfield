@@ -385,29 +385,42 @@
         }, { capture: true });
     }
 
-    // ---- Terminal auto-scroll — always keep the newest log line pinned
-    // to the bottom. xterm.js has scrollToBottom() but Pelican doesn't
-    // always call it when new data lands into a fixed-height container.
+    // ---- Terminal auto-scroll + refit — always keep the newest log line
+    // pinned to the bottom AND force xterm.js to recompute row count for
+    // our fixed-height container. Pelican initializes xterm before our
+    // CSS applies, so xterm renders more rows than fit and clips the
+    // bottom. Dispatching a window resize event triggers xterm's fit-addon.
     function wireTerminalAutoScroll() {
         const wrap = document.querySelector('#terminal');
         if (!wrap || wrap.__dfScrollWired) return;
         const viewport = wrap.querySelector('.xterm-viewport');
         if (!viewport) { setTimeout(wireTerminalAutoScroll, 300); return; }
         wrap.__dfScrollWired = true;
+
+        // Kick xterm to refit against our capped container height
+        const refit = () => {
+            try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+        };
+        // Fire a few times to catch late-arriving font loads / Livewire boot
+        refit();
+        [80, 250, 600, 1500].forEach(ms => setTimeout(refit, ms));
+
+        // Re-fit whenever the wrapper's own box changes size (window resize,
+        // sidebar collapse, etc.)
+        if (window.ResizeObserver) {
+            new ResizeObserver(refit).observe(wrap);
+        }
+
         let userScrolledUp = false;
-        // Track whether user manually scrolled away from bottom
         viewport.addEventListener('scroll', () => {
             const gap = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
             userScrolledUp = gap > 40;   // 40px buffer for "at bottom"
         }, { passive: true });
-        // On any DOM mutation inside the terminal (xterm renders new rows),
-        // scroll to bottom UNLESS the user deliberately scrolled up.
         const obs = new MutationObserver(() => {
             if (userScrolledUp) return;
             viewport.scrollTop = viewport.scrollHeight;
         });
         obs.observe(wrap, { childList: true, subtree: true, characterData: true });
-        // Initial pin
         viewport.scrollTop = viewport.scrollHeight;
     }
 

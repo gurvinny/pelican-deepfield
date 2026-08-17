@@ -5,7 +5,7 @@
 **A deep-cosmic theme plugin for [Pelican Panel](https://pelican.dev).**
 *Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.*
 
-![Version](https://img.shields.io/badge/version-1.0.5-a78bfa?style=for-the-badge&labelColor=0b0a1e)
+![Version](https://img.shields.io/badge/version-1.0.6-a78bfa?style=for-the-badge&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
