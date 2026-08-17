@@ -53,9 +53,9 @@
     --df-aurora-soft:  linear-gradient(120deg, rgba(56,225,255,0.16), rgba(94,234,212,0.16), rgba(167,139,250,0.20));
 
     /* Glass — heavy tint to protect readability */
-    --df-glass-sidebar: rgba(11, 10, 30, 0.78);
-    --df-glass-topbar:  rgba(11, 10, 30, 0.68);
-    --df-glass-card:    rgba(18, 17, 42, 0.90);
+    --df-glass-sidebar: rgba(11, 10, 30, 0.82);
+    --df-glass-topbar:  rgba(11, 10, 30, 0.72);
+    --df-glass-card:    rgba(16, 15, 36, 0.86);
     --df-glass-modal:   rgba(11, 10, 30, 0.96);
     --df-glass-border:  rgba(167, 139, 250, 0.22);
     --df-glass-border-strong: rgba(167, 139, 250, 0.36);
@@ -126,8 +126,55 @@ html { background: var(--df-bg-void) !important; }
     pointer-events: auto !important;
 }
 
-/* Modals, slide-overs, panels: hard-boost above overlay */
-.fi-modal,
+/* Modals: hard-boost above overlay. Filament's own CSS does NOT declare
+   `position` on .fi-modal, so we have to. Slide-overs dock to the right
+   edge; centered modals sit in the middle of the viewport. */
+.fi-modal.fi-modal-open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9500 !important;
+    display: flex !important;
+    pointer-events: auto !important;
+}
+.fi-modal.fi-modal-open.fi-modal-slide-over {
+    align-items: stretch !important;
+    justify-content: flex-end !important;
+}
+.fi-modal.fi-modal-open.fi-modal-slide-over-from-start {
+    justify-content: flex-start !important;
+}
+.fi-modal.fi-modal-open:not(.fi-modal-slide-over) {
+    align-items: center !important;
+    justify-content: center !important;
+}
+.fi-modal.fi-modal-open .fi-modal-window-ctn {
+    display: contents !important;
+}
+
+/* Slide-over panel: right-docked full-height glass */
+.fi-modal-slide-over .fi-modal-window {
+    max-width: 32rem !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    overflow: auto !important;
+    background: var(--df-glass-modal) !important;
+    border-left: 1px solid var(--df-glass-border-strong) !important;
+    border-radius: 0 !important;
+    box-shadow: -30px 0 80px -20px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Centered modal window */
+.fi-modal:not(.fi-modal-slide-over) .fi-modal-window {
+    max-width: min(90vw, 42rem) !important;
+    max-height: 88vh !important;
+    overflow: auto !important;
+    background: var(--df-glass-modal) !important;
+    border: 1px solid var(--df-glass-border-strong) !important;
+    border-radius: var(--df-radius-lg) !important;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7) !important;
+}
+
 .fi-modal-window,
 .fi-modal-content,
 .fi-slide-over,
@@ -136,7 +183,6 @@ html { background: var(--df-bg-void) !important; }
 [class*="slide-over"] {
     z-index: 9500 !important;
     pointer-events: auto !important;
-    position: relative;
 }
 
 /* Dropdowns, user menu, floating portals */
@@ -684,10 +730,36 @@ a:hover, .fi-link:hover {
     background: transparent !important;
     border: 1px solid var(--df-glass-border-strong);
     border-radius: var(--df-radius-lg);
-    padding: 0.5rem;
+    padding: 1.75rem 0.75rem 0.75rem !important;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 40px rgba(56, 225, 255, 0.08), inset 0 0 60px rgba(11, 10, 30, 0.6);
+    box-shadow:
+        0 0 40px rgba(56, 225, 255, 0.10),
+        inset 0 0 80px rgba(11, 10, 30, 0.7),
+        0 20px 40px -20px rgba(0, 0, 0, 0.6);
+}
+
+/* Terminal chrome — CRT-style monitor top bar */
+#terminal::before {
+    content: '● ● ●   SERVER  CONSOLE';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    color: rgba(94, 234, 212, 0.65);
+    background: linear-gradient(180deg, rgba(11, 10, 30, 0.92), rgba(11, 10, 30, 0.5));
+    border-bottom: 1px solid var(--df-glass-border);
+    border-top-left-radius: var(--df-radius-lg);
+    border-top-right-radius: var(--df-radius-lg);
+    z-index: 5;
+    pointer-events: none;
 }
 
 /* Ensure xterm's own DOM/canvas layers sit flush and transparent so #terminal bg shows */
@@ -734,17 +806,6 @@ body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
         rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
         rgba(94,234,212,0.22) 3px, rgba(0,0,0,0) 5px);
     opacity: 1;
-}
-
-/* CRT edge vignette — also above canvas */
-body[data-df-crt="1"] #terminal::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%);
-    z-index: 998;
-    border-radius: var(--df-radius-lg);
 }
 
 /* xterm canvases are drawn absolutely; make sure they don't establish a stacking context that traps our overlay */
@@ -1152,7 +1213,7 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="start"],
 .fi-btn:has(.fi-icon[class*="player-play"]),
 .fi-btn:has(svg[class*="player-play"]) {
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.18), rgba(52, 211, 153, 0.06)) !important;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.32), rgba(52, 211, 153, 0.12)) !important;
     color: #34d399 !important;
     border: 1px solid rgba(52, 211, 153, 0.55) !important;
     box-shadow: 0 0 22px rgba(52, 211, 153, 0.35), inset 0 0 20px rgba(52, 211, 153, 0.06) !important;
@@ -1165,7 +1226,7 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="restart"],
 .fi-btn:has(.fi-icon[class*="refresh"]),
 .fi-btn:has(svg[class*="refresh"]) {
-    background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(250, 204, 21, 0.06)) !important;
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.32), rgba(250, 204, 21, 0.12)) !important;
     color: #facc15 !important;
     border: 1px solid rgba(250, 204, 21, 0.55) !important;
     box-shadow: 0 0 22px rgba(250, 204, 21, 0.35), inset 0 0 20px rgba(250, 204, 21, 0.06) !important;
@@ -1179,7 +1240,7 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="kill"],
 .fi-btn:has(.fi-icon[class*="player-stop"]),
 .fi-btn:has(svg[class*="player-stop"]) {
-    background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), rgba(248, 113, 113, 0.06)) !important;
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.32), rgba(248, 113, 113, 0.12)) !important;
     color: #f87171 !important;
     border: 1px solid rgba(248, 113, 113, 0.55) !important;
     box-shadow: 0 0 22px rgba(248, 113, 113, 0.35), inset 0 0 20px rgba(248, 113, 113, 0.06) !important;
