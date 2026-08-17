@@ -69,12 +69,30 @@ Values are persisted to `.env` (`DEEPFIELD_*`) so they survive updates.
 
 ## Screenshots
 
-*Coming soon.*
+<div align="center">
 
-<!-- ![Dashboard](screenshots/dashboard.png) -->
-<!-- ![Server list](screenshots/server-list.png) -->
-<!-- ![Console with CRT bloom](screenshots/console.png) -->
-<!-- ![Settings](screenshots/settings.png) -->
+### Server console — CRT chrome, live logs, aurora power buttons
+![Server console](screenshots/03-server-console.png)
+
+### Login — aurora DEEPFIELD wordmark, glass form card
+![Login](screenshots/00-login.png)
+
+### Server list — fluid card grid on a cosmic backdrop
+![Server list](screenshots/02-server-list.png)
+
+### Deepfield settings — Filament-native slide-over, right-docked
+![Plugin settings](screenshots/04-plugin-settings.png)
+
+### Admin dashboard — sidebar glass, aurora active-nav, glowing Orbitron H1
+![Admin dashboard](screenshots/01-admin-dashboard.png)
+
+### Notifications tray — left-docked, click-through overlay
+![Notifications](screenshots/05-notifications.png)
+
+### User menu popup — theme-switcher hidden (Deepfield is dark-only)
+![User menu](screenshots/06-user-menu.png)
+
+</div>
 
 ---
 
@@ -101,7 +119,7 @@ If Pelican Panel bumps to a new major Filament version, expect a compat patch �
 
 ## Roadmap
 
-- [ ] Screenshots
+- [x] Screenshots
 - [ ] Optional lightweight light-mode variant (dawn cosmic — cream bg, indigo ink)
 - [ ] Extra nebula presets (aurora / ember / abyss)
 - [ ] Per-user preference overrides (currently server-wide via `.env`)

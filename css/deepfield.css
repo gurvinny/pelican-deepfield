@@ -1035,63 +1035,100 @@ body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
    .fi-simple-page for some wizard flows — we exclude those by requiring the
    body to have a `fi-panel-auth` class or the URL to be an auth route via
    an explicit body attribute set from the head-hook JS. */
-body[data-df-auth="1"] .fi-simple-page,
+/* Auth layout: centered form on cosmic backdrop, with DEEPFIELD wordmark
+   floating above the card. Simpler than 50/50 hero — Filament's nested
+   .fi-simple-* elements resist that approach. */
 body[data-df-auth="1"] .fi-simple-layout {
     background: transparent !important;
-    min-height: 100vh;
+    min-height: 100vh !important;
     display: flex !important;
-    align-items: stretch !important;
-    justify-content: stretch !important;
-    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2rem !important;
     position: relative;
 }
 
-/* Left half — cosmic hero panel */
-body[data-df-auth="1"] .fi-simple-page::before {
+/* DEEPFIELD wordmark above the card */
+body[data-df-auth="1"] .fi-simple-layout::before {
     content: 'DEEPFIELD';
-    display: none;
-    position: relative;
-    flex: 1 1 50%;
-    align-items: center;
-    justify-content: center;
+    position: fixed;
+    top: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-size: clamp(2rem, 4vw, 3.5rem);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.28em;
     color: transparent;
     background: var(--df-aurora);
     -webkit-background-clip: text;
     background-clip: text;
     text-shadow: 0 0 40px rgba(94, 234, 212, 0.35);
-    border-right: 1px solid var(--df-glass-border);
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
 }
 
-@media (min-width: 900px) {
-    body[data-df-auth="1"] .fi-simple-page::before { display: flex !important; }
-}
-
-/* Right half — form card */
-body[data-df-auth="1"] .fi-simple-page > *,
-body[data-df-auth="1"] .fi-simple-main {
-    flex: 1 1 50% !important;
+/* Blow out every Filament width cap on the auth chain so the layout
+   can breathe. The form card gets its own 26rem cap below. */
+body[data-df-auth="1"] .fi-simple-main-ctn,
+body[data-df-auth="1"] .fi-simple-main,
+body[data-df-auth="1"] .fi-simple-page {
+    max-width: none !important;
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 2rem !important;
-    max-width: 100% !important;
-    width: auto !important;
+    flex-direction: column !important;
 }
 
-body[data-df-auth="1"] .fi-simple-main-ctn,
-body[data-df-auth="1"] .fi-simple-main > * {
+/* The actual form card — .fi-simple-page-content is the wrapper Filament
+   ships with `flex-direction: row` (why?). Force column so header + form
+   + footer stack vertically. */
+body[data-df-auth="1"] .fi-simple-page > *,
+body[data-df-auth="1"] .fi-simple-page-content {
     width: 100% !important;
     max-width: 26rem !important;
     background: var(--df-glass-card) !important;
     border: 1px solid var(--df-glass-border-strong) !important;
     border-radius: var(--df-radius-lg) !important;
-    padding: 2rem !important;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.65), 0 0 40px rgba(94, 234, 212, 0.10);
-    backdrop-filter: blur(14px);
+    padding: 2.5rem !important;
+    box-shadow:
+        0 30px 80px -20px rgba(0, 0, 0, 0.65),
+        0 0 40px rgba(94, 234, 212, 0.10) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    align-items: stretch !important;
+}
+
+/* Every form-column inside the card fills the width */
+body[data-df-auth="1"] .fi-simple-page-content .fi-grid,
+body[data-df-auth="1"] .fi-simple-page-content .fi-grid-col,
+body[data-df-auth="1"] .fi-simple-page-content > * {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: 1fr !important;
+}
+
+/* Header (logo + heading) — center and give it space */
+body[data-df-auth="1"] .fi-simple-header {
+    text-align: center !important;
+    align-items: center !important;
+    margin-bottom: 0.5rem !important;
+}
+body[data-df-auth="1"] .fi-logo {
+    justify-content: center !important;
+}
+
+/* Footer under the card */
+body[data-df-auth="1"] .fi-simple-layout footer {
+    max-width: 26rem !important;
+    margin-top: 1rem !important;
 }
 
 body[data-df-auth="1"] .fi-simple-header,
