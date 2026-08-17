@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Frame Deepfield screenshots with a cosmic-gradient bg + aurora glow + drop shadow.
-Input: 1680x720 (or any) raw PNG. Output: 2100x900 framed PNG.
+Input: 2100x900 raw PNG (matches Pelican Hub 21:9 marketplace aspect).
+Output: 2400x1030 framed PNG — leaves ~150px cosmic border on each side.
 """
 import sys
 import random
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 
-W, H = 2100, 900
-MARGIN_X = 100
-MARGIN_Y = 90
+W, H = 2400, 1030
+MARGIN_X = 120
+MARGIN_Y = 60
 CORNER_R = 10
 STAR_COUNT = 220
 SHOT_MAX_W = W - MARGIN_X * 2

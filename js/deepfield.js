@@ -429,47 +429,24 @@
         }, { capture: true });
     }
 
-    // ---- Terminal auto-scroll + refit — always keep the newest log line
-    // pinned to the bottom AND force xterm.js to recompute row count for
-    // our fixed-height container. Pelican initializes xterm before our
-    // CSS applies, so xterm renders more rows than fit and clips the
-    // bottom. Dispatching a window resize event triggers xterm's fit-addon.
-    function wireTerminalAutoScroll() {
+    // ---- Terminal refit — Pelican encapsulates the xterm instance in a
+    // closure (not reachable via Alpine.$data or Livewire snapshot). But
+    // Pelican DOES have a debounced window-resize listener that calls
+    // fitAddon.fit() internally. So: watch the terminal wrapper for size
+    // changes (sidebar toggle, window resize, font load) and re-emit a
+    // window resize event so Pelican refits. The CSS wrapper also has
+    // overflow-y:auto as a safety net — nothing gets clipped either way.
+    function wireTerminalRefit() {
         const wrap = document.querySelector('#terminal');
-        if (!wrap || wrap.__dfScrollWired) return;
-        const viewport = wrap.querySelector('.xterm-viewport');
-        if (!viewport) { setTimeout(wireTerminalAutoScroll, 300); return; }
-        wrap.__dfScrollWired = true;
-
-        // Kick xterm to refit against our capped container height
-        const refit = () => {
-            try { window.dispatchEvent(new Event('resize')); } catch (e) {}
-        };
-        // Fire a few times to catch late-arriving font loads / Livewire boot
-        refit();
-        [80, 250, 600, 1500].forEach(ms => setTimeout(refit, ms));
-
-        // Re-fit whenever the wrapper's own box changes size (window resize,
-        // sidebar collapse, etc.)
-        if (window.ResizeObserver) {
-            new ResizeObserver(refit).observe(wrap);
-        }
-
-        let userScrolledUp = false;
-        viewport.addEventListener('scroll', () => {
-            const gap = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-            userScrolledUp = gap > 40;   // 40px buffer for "at bottom"
-        }, { passive: true });
-        const obs = new MutationObserver(() => {
-            if (userScrolledUp) return;
-            viewport.scrollTop = viewport.scrollHeight;
-        });
-        obs.observe(wrap, { childList: true, subtree: true, characterData: true });
-        viewport.scrollTop = viewport.scrollHeight;
+        if (!wrap || wrap.__dfRefitWired) return;
+        wrap.__dfRefitWired = true;
+        const kick = () => { try { window.dispatchEvent(new Event('resize')); } catch (e) {} };
+        if (window.ResizeObserver) new ResizeObserver(kick).observe(wrap);
+        document.addEventListener('livewire:navigated', () => setTimeout(kick, 60));
     }
 
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); watchDropdownClamps(); wireSidebarToggle(); wireTerminalAutoScroll(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); watchDropdownClamps(); wireSidebarToggle(); wireTerminalRefit(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);

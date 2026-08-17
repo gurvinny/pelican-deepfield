@@ -885,10 +885,11 @@ a:hover, .fi-link:hover {
 }
 
 /* Terminal chrome — CRT monitor top bar.
-   No fixed height / no overflow hidden — those clipped xterm's bottom
-   rows because xterm always renders a screen ~68px taller than viewport
-   (its internal scrollback rendering). Use max-height as a soft cap
-   with overflow:auto so any excess scrolls the wrapper itself. */
+   The xterm instance is encapsulated (not reachable via Alpine.$data or
+   Livewire component data), so we can't call fitAddon.fit() directly.
+   xterm always renders a screen ~68px taller than its viewport (its
+   internal scrollback rendering). max-height with overflow-y:auto lets
+   the wrapper scroll any excess itself — no clipping, no page sprawl. */
 #terminal {
     padding: 2.25rem 0.85rem 0.85rem !important;
     max-height: min(70vh, 720px) !important;
