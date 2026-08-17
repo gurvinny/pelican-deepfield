@@ -97,17 +97,20 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         $jetbrains    = asset('plugins/deepfield/fonts/JetBrainsMono-Variable.woff2');
         $orbitron     = asset('plugins/deepfield/fonts/Orbitron-Variable.woff2');
 
-        // SVG favicon — aurora gradient orbit
+        // SVG favicon — aurora gradient orbit.
+        // Use literal `#` in the SVG; rawurlencode() does the escaping.
+        // Previously had `%23` literals inside the string AND rawurlencode
+        // wrapping — became `%2523` (invalid), fills fell back to black.
         $favicon = 'data:image/svg+xml;utf8,' . rawurlencode(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
             .'<defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1">'
-            .'<stop offset="0" stop-color="%2338e1ff"/>'
-            .'<stop offset="0.5" stop-color="%235eead4"/>'
-            .'<stop offset="1" stop-color="%23a78bfa"/>'
+            .'<stop offset="0" stop-color="#38e1ff"/>'
+            .'<stop offset="0.5" stop-color="#5eead4"/>'
+            .'<stop offset="1" stop-color="#a78bfa"/>'
             .'</linearGradient></defs>'
-            .'<rect width="64" height="64" rx="14" fill="%23050614"/>'
-            .'<circle cx="32" cy="32" r="18" fill="none" stroke="url(%23a)" stroke-width="3"/>'
-            .'<circle cx="32" cy="32" r="4" fill="url(%23a)"/>'
+            .'<rect width="64" height="64" rx="14" fill="#050614"/>'
+            .'<circle cx="32" cy="32" r="18" fill="none" stroke="url(#a)" stroke-width="3"/>'
+            .'<circle cx="32" cy="32" r="4" fill="url(#a)"/>'
             .'</svg>'
         );
 
