@@ -2,7 +2,7 @@
     "id": "deepfield",
     "name": "Deepfield",
     "author": "gurvinny",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "description": "Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.",
     "category": "theme",
     "namespace": "Gurvinny\\Deepfield",

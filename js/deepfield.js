@@ -366,6 +366,50 @@
         badges.forEach(b => obs.observe(b, { childList: true, characterData: true, subtree: true }));
     }
 
+    // ---- Clamp any dropdown panel that Alpine floating-ui has placed
+    // off-screen (happens with the profile popup when the admin sidebar
+    // is collapsed to icon-width — trigger is at x~24, popup gets positioned
+    // to x=-200 with negative left). Watch for panels appearing and slide
+    // them back into the viewport.
+    function watchDropdownClamps() {
+        const clamp = (panel) => {
+            const r = panel.getBoundingClientRect();
+            if (r.width < 20) return;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            let dx = 0, dy = 0;
+            if (r.left < 8)             dx = 8 - r.left;
+            if (r.right > vw - 8)       dx = (vw - 8) - r.right;
+            if (r.top < 8)              dy = 8 - r.top;
+            if (r.bottom > vh - 8)      dy = (vh - 8) - r.bottom;
+            if (dx || dy) {
+                const curLeft = parseFloat(panel.style.left) || 0;
+                const curTop  = parseFloat(panel.style.top)  || 0;
+                panel.style.setProperty('left', (curLeft + dx) + 'px', 'important');
+                panel.style.setProperty('top',  (curTop + dy)  + 'px', 'important');
+            }
+        };
+        // Watch all dropdown panels for style changes (Alpine mutates style
+        // when floating-ui recomputes position)
+        const wire = (panel) => {
+            if (panel.__dfClamp) return;
+            panel.__dfClamp = true;
+            new MutationObserver(() => {
+                if (getComputedStyle(panel).display !== 'none') clamp(panel);
+            }).observe(panel, { attributes: true, attributeFilter: ['style'] });
+        };
+        document.querySelectorAll('.fi-dropdown-panel').forEach(wire);
+        // Also wire new panels as they arrive
+        new MutationObserver(muts => {
+            for (const m of muts) for (const n of m.addedNodes) {
+                if (n.nodeType === 1) {
+                    if (n.matches?.('.fi-dropdown-panel')) wire(n);
+                    n.querySelectorAll?.('.fi-dropdown-panel').forEach(wire);
+                }
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
     // ---- Narrow-viewport sidebar toggle — Filament's built-in button only
     // OPENS the sidebar (close is handled by tap-outside on an overlay).
     // Make it toggle both ways so the button visibly closes what it opened.
@@ -425,7 +469,7 @@
     }
 
     // Wire up once on first ready + reinit on navigation
-    const initExtras = () => { initTabTitle(); initAudioCues(); wireSidebarToggle(); wireTerminalAutoScroll(); };
+    const initExtras = () => { initTabTitle(); initAudioCues(); watchDropdownClamps(); wireSidebarToggle(); wireTerminalAutoScroll(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initExtras);
     else initExtras();
     document.addEventListener('livewire:navigated', initExtras);

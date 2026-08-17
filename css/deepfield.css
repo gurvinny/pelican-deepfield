@@ -875,23 +875,16 @@ a:hover, .fi-link:hover {
 }
 
 /* Terminal chrome — CRT monitor top bar.
-   Fixed height with generous bottom padding so xterm's last rendered
-   row is never clipped even if its row-height doesn't divide evenly
-   into the container. .xterm-viewport handles internal scroll. */
+   No fixed height / no overflow hidden — those clipped xterm's bottom
+   rows because xterm always renders a screen ~68px taller than viewport
+   (its internal scrollback rendering). Use max-height as a soft cap
+   with overflow:auto so any excess scrolls the wrapper itself. */
 #terminal {
-    padding: 2.25rem 0.85rem 2rem !important;
-    height: min(58vh, 560px) !important;
+    padding: 2.25rem 0.85rem 0.85rem !important;
+    max-height: min(70vh, 720px) !important;
     min-height: 320px !important;
-    overflow: hidden !important;
-}
-#terminal .xterm,
-#terminal .terminal.xterm {
-    height: 100% !important;
-    max-height: 100% !important;
-}
-#terminal .xterm-viewport {
-    max-height: 100% !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
 }
 #terminal::before {
     content: '● ● ●         SERVER  CONSOLE';
