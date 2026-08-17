@@ -815,9 +815,26 @@ a:hover, .fi-link:hover {
 }
 
 /* Terminal chrome — CRT-style monitor top bar. Extra height + roomy
-   letter-spacing so the label reads deliberate, not cramped. */
+   letter-spacing so the label reads deliberate, not cramped.
+   Fixed height with internal xterm scrolling: caps growth so long
+   log volume doesn't stretch the page. */
 #terminal {
     padding: 2.25rem 0.85rem 0.85rem !important;
+    height: min(58vh, 560px) !important;
+    max-height: min(58vh, 560px) !important;
+    min-height: 320px !important;
+}
+
+/* xterm's own viewport handles internal scrolling — force it to fill the
+   fixed wrapper and NEVER exceed it. */
+#terminal .xterm,
+#terminal .terminal.xterm {
+    height: 100% !important;
+    max-height: 100% !important;
+}
+#terminal .xterm-viewport {
+    max-height: 100% !important;
+    overflow-y: auto !important;
 }
 #terminal::before {
     content: '● ● ●         SERVER  CONSOLE';
