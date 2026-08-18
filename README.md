@@ -5,7 +5,7 @@
 **A deep-cosmic theme plugin for [Pelican Panel](https://pelican.dev).**
 *Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.*
 
-![Version](https://img.shields.io/badge/version-1.0.12-a78bfa?style=for-the-badge&labelColor=0b0a1e)
+![Version](https://img.shields.io/badge/version-1.0.13-a78bfa?style=for-the-badge&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
@@ -73,25 +73,25 @@ Values are persisted to `.env` (`DEEPFIELD_*`) so they survive updates.
 <div align="center">
 
 ### Server console — CRT chrome, live logs, aurora power buttons
-![Server console](screenshots/03-server-console.png)
+![Server console](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/03-server-console.png)
 
 ### Login — aurora DEEPFIELD wordmark, glass form card
-![Login](screenshots/00-login.png)
+![Login](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/00-login.png)
 
 ### Server list — fluid card grid on a cosmic backdrop
-![Server list](screenshots/02-server-list.png)
+![Server list](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/02-server-list.png)
 
 ### Deepfield settings — Filament-native slide-over, right-docked
-![Plugin settings](screenshots/04-plugin-settings.png)
+![Plugin settings](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/04-plugin-settings.png)
 
 ### Admin dashboard — sidebar glass, aurora active-nav, glowing Orbitron H1
-![Admin dashboard](screenshots/01-admin-dashboard.png)
+![Admin dashboard](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/01-admin-dashboard.png)
 
 ### Notifications tray — left-docked, click-through overlay
-![Notifications](screenshots/05-notifications.png)
+![Notifications](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/05-notifications.png)
 
 ### User menu popup — theme-switcher hidden (Deepfield is dark-only)
-![User menu](screenshots/06-user-menu.png)
+![User menu](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/06-user-menu.png)
 
 </div>
 

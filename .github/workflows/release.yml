@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify tag matches plugin.json
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST=$(jq -r .version plugin.json)
+          UPDATE=$(jq -r '."*".version' update.json)
+          if [ "$TAG" != "$MANIFEST" ] || [ "$TAG" != "$UPDATE" ]; then
+              echo "tag $TAG, plugin.json $MANIFEST, update.json $UPDATE" >&2
+              echo "versions must match before tagging" >&2
+              exit 1
+          fi
+
+      - name: Build archive
+        run: scripts/build-release.sh deepfield.zip
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" deepfield.zip \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Deepfield $GITHUB_REF_NAME" \
+              --generate-notes \
+            || gh release upload "$GITHUB_REF_NAME" deepfield.zip \
+              --repo "$GITHUB_REPOSITORY" --clobber
