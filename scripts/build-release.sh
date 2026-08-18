@@ -10,6 +10,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${1:-$ROOT/deepfield.zip}"
+# zip runs from inside the staging dir, so the destination must be absolute.
+case "$OUT" in
+    /*) ;;
+    *) OUT="$PWD/$OUT" ;;
+esac
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
