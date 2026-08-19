@@ -3,140 +3,95 @@
 # Deepfield
 
 **A deep-cosmic theme plugin for [Pelican Panel](https://pelican.dev).**
-*Run your servers from the edge of the observable universe. Aurora glow, parallax stars, terminal that hums.*
+*Run your servers from the edge of the observable universe.*
 
-![Version](https://img.shields.io/badge/version-1.0.13-a78bfa?style=for-the-badge&labelColor=0b0a1e)
+![Version](https://img.shields.io/badge/version-1.1.0-a78bfa?style=for-the-badge&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
+![PHP](https://img.shields.io/badge/php-%E2%89%A5_8.3-818cf8?style=for-the-badge&labelColor=0b0a1e)
 
 </div>
 
 ---
 
-## What it is
+<div align="center">
 
-Deepfield replaces Pelican Panel's default look with a dark-only, cosmic-atmospheric UI:
+![Server console](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/03-server-console.png)
+*Server console — CRT chrome, live logs, aurora power buttons*
 
-- **Canvas-based starfield** with three parallax depth layers, mouse-driven drift, and pooled meteors with tapered gradient trails — replaces the naive DOM-`<span>` approach seen in other theme plugins.
-- **Drifting nebula fog** layered beneath the stars for depth. Hue-swappable (violet · teal · rose).
-- **Aurora accent gradient** (cyan → teal → violet) on primary buttons, active nav, focus rings, and status badges.
-- **Glassmorphism where it earns its keep** — sidebar and topbar float as translucent slabs, but with heavy tint + strong blur so text always wins. Modals stay near-opaque. Nothing feels washed out.
-- **Premium typography** — Orbitron for display H1s, Space Grotesk for the interface, JetBrains Mono for every stretch of code. All self-hosted (no CDN or Google Fonts round-trip).
-- **Terminal-first server console** with optional CRT bloom, subtle scanlines, and a monitor-style top-bar chrome. The terminal is height-capped and scrolls internally — busy servers don't push the command bar off-screen.
-- **Filament-native settings page** — starfield density, nebula on/off, hue, CRT bloom, terminal palette (cosmic · Minecraft Vanilla · Solarized Aurora · Nord Aurora), scanline density, audio cues, reduce-motion. Written straight to `.env`, no database migrations.
-- **Responsive** — sidebar collapses cleanly on narrow viewports (side-by-side with a game window, mobile, whatever). Contrast-boosted hamburger button on the topbar. Sticky sidebar on desktop so it stays visible while the console scrolls.
-- **Motion respects you** — `prefers-reduced-motion` is honored automatically; there is also an explicit user toggle.
+</div>
 
-Skins **all three Filament panels**: admin, app (server list), and server (client console).
+## Features
 
----
+- **Canvas starfield** — three parallax depth layers, mouse-driven drift, pooled meteors with tapered trails.
+- **Nebula fog** — slow-drifting cloud layer beneath the stars. Hue-swappable (violet · teal · rose).
+- **Aurora accents** — cyan → teal → violet on primary buttons, active nav, focus rings, status badges.
+- **Readable glass** — sidebar and topbar float as translucent slabs with heavy tint; modals stay near-opaque.
+- **Terminal-first console** — CRT top bar, optional phosphor bloom and scanlines, four xterm palettes including a 1:1 Minecraft vanilla `§` match.
+- **Self-hosted type** — Orbitron display, Space Grotesk UI, JetBrains Mono code. No CDN, no Google Fonts.
+- **Filament-native settings** — every effect toggleable in-panel, persisted to `.env`. No migrations.
+- **Responsive & motion-safe** — sidebar collapses on narrow viewports; `prefers-reduced-motion` always honored.
+
+Skins all three Filament panels: **admin**, **app**, and **server**. Dark-only by design.
 
 ## Install
 
-### Via panel frontend
-Admin → Plugins → Install from ZIP → upload `deepfield.zip` from the [releases page](https://github.com/gurvinny/pelican-deepfield/releases).
+**Via panel** — Admin → Plugins → Install from ZIP → upload `deepfield.zip` from [releases](https://github.com/gurvinny/pelican-deepfield/releases).
 
-### Manual
+**Manual**
+
 ```bash
 cd /var/www/pelican/plugins
 git clone https://github.com/gurvinny/pelican-deepfield.git deepfield
 cd /var/www/pelican
-php artisan p:plugin:install
-# select "deepfield"
+php artisan p:plugin:install   # select "deepfield"
 ```
 
-> **Important:** the target folder **must** be named `deepfield` (matching the `id` in `plugin.json`). If you `git clone` without the trailing `deepfield` argument, the folder ends up as `pelican-deepfield` and the panel will refuse it with a "plugin id mismatch" error. Just rename the folder — no other changes needed.
+> The folder **must** be named `deepfield` to match the `id` in `plugin.json`. Cloning without the trailing argument leaves it as `pelican-deepfield` and the panel rejects it with a plugin-id mismatch — just rename it.
 
-Hard-refresh the panel (`Ctrl+Shift+R`). You should see the nebula fade in and the starfield settle behind your sidebar.
-
----
+Then hard-refresh the panel (`Ctrl+Shift+R`).
 
 ## Settings
 
-Admin → Plugins → **Deepfield** → Settings.
+Admin → Plugins → **Deepfield** → Settings. Values are written to `.env` as `DEEPFIELD_*`, so they survive updates.
 
-| Setting | Default | Description |
+| Setting | Default | Options |
 |---|---|---|
-| **Starfield density** | Medium | `off` / `low` (~250) / `medium` (~600) / `high` (~1200) — perf lever for older clients |
-| **Nebula fog** | On | Soft drifting cloud layer beneath the stars |
-| **Nebula hue** | Violet | `violet` · `teal` · `rose` |
-| **CRT bloom on server console** | On | Phosphor glow + subtle scanlines on the in-game-server console page |
-| **Reduce motion** | Off | Disables parallax + meteors. `prefers-reduced-motion` is always respected regardless of this setting |
-
-Values are persisted to `.env` (`DEEPFIELD_*`) so they survive updates.
-
----
+| Starfield density | Medium | `off` / `low` ~250 / `medium` ~600 / `high` ~1200 |
+| Nebula fog | On | on / off |
+| Nebula hue | Violet | violet · teal · rose |
+| CRT bloom | On | Phosphor glow + scanlines on the server console |
+| Terminal palette | Cosmic | cosmic · Minecraft Vanilla · Solarized Aurora · Nord Aurora |
+| Reduce motion | Off | Disables parallax + meteors |
 
 ## Screenshots
 
 <div align="center">
 
-### Server console — CRT chrome, live logs, aurora power buttons
-![Server console](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/03-server-console.png)
-
-### Login — aurora DEEPFIELD wordmark, glass form card
 ![Login](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/00-login.png)
+*Login — aurora wordmark, glass form card*
 
-### Server list — fluid card grid on a cosmic backdrop
 ![Server list](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/02-server-list.png)
-
-### Deepfield settings — Filament-native slide-over, right-docked
-![Plugin settings](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/04-plugin-settings.png)
-
-### Admin dashboard — sidebar glass, aurora active-nav, glowing Orbitron H1
-![Admin dashboard](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/01-admin-dashboard.png)
-
-### Notifications tray — left-docked, click-through overlay
-![Notifications](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/05-notifications.png)
-
-### User menu popup — theme-switcher hidden (Deepfield is dark-only)
-![User menu](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/06-user-menu.png)
+*Server list — fluid card grid on a cosmic backdrop*
 
 </div>
 
----
+## Performance
 
-## Performance notes
-
-- Runs a single `requestAnimationFrame` loop for stars, a second (~10 fps effective) for the nebula.
-- Pauses both loops when the tab is hidden (`visibilitychange`).
+- One `requestAnimationFrame` loop for stars, a second at ~10fps for the nebula. Both pause when the tab is hidden.
 - Pointer parallax is passive and eased — no synchronous layout thrash.
-- The starfield is DPR-aware but caps at `devicePixelRatio: 2` to avoid melting 4K displays.
-- Density `high` (~1200 stars) has been comfortable at 60fps on a mid-range 2019 laptop. If you notice fan spin, drop to `medium` or `low`.
-
----
+- DPR-aware, capped at `2` so 4K displays don't melt.
+- `high` density holds 60fps on a mid-range 2019 laptop. Drop to `medium` if you hear fans.
 
 ## Compatibility
 
-- **Pelican Panel:** ≥ 1.0
-- **Filament:** v5.7
-- **PHP:** ≥ 8.3
-- **Browsers:** any evergreen browser with `backdrop-filter` support (Chrome, Edge, Firefox, Safari 15.4+).
+Pelican Panel ≥ 1.0 · Filament v5.7 · PHP ≥ 8.3 · any evergreen browser with `backdrop-filter` (Safari 15.4+).
 
-If Pelican Panel bumps to a new major Filament version, expect a compat patch — open an issue if I'm slow.
-
----
-
-## Roadmap
-
-- [x] Screenshots
-- [ ] Optional lightweight light-mode variant (dawn cosmic — cream bg, indigo ink)
-- [ ] Extra nebula presets (aurora / ember / abyss)
-- [ ] Per-user preference overrides (currently server-wide via `.env`)
-- [ ] Publish on the Pelican Hub marketplace
-
----
-
-## Credits
-
-Made by [@gurvinny](https://github.com/gurvinny).
-
-Fonts: **Space Grotesk** (Florian Karsten), **JetBrains Mono** (JetBrains), **Orbitron** (Matt McInerney / The League of Moveable Type) — all SIL Open Font License 1.1.
-
----
+If Pelican bumps to a new major Filament version, open an issue if the compat patch is slow to land.
 
 ## License
 
-**MIT** for the plugin code. See [`LICENSE`](LICENSE).
-Bundled fonts are OFL 1.1 — see `fonts/OFL.*.txt`.
+MIT — see [`LICENSE`](LICENSE). Bundled fonts are OFL 1.1 (`fonts/OFL.*.txt`): **Space Grotesk**, **JetBrains Mono**, **Orbitron**.
+
+Made by [@gurvinny](https://github.com/gurvinny).
