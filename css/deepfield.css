@@ -187,10 +187,15 @@ html { background: var(--df-bg-void) !important; }
     pointer-events: auto !important;
 }
 
-/* Dropdowns, user menu, floating portals */
+/* Dropdowns, user menu, floating portals.
+   Only the floating panel is lifted, never .fi-dropdown itself. That class is
+   the wrapper around the trigger button and is always in the DOM, so giving it
+   z-index 9800 floated every row's action button above the modal layer (9500):
+   opening a slide-over or modal on a table left a column of stray ⋮ buttons
+   punched through the panel. Teleported panels stay above the modal so selects
+   inside a modal still open over it. */
 .fi-dropdown-panel,
 .fi-user-menu,
-.fi-dropdown,
 [x-teleport],
 [data-floating-ui-portal],
 [data-radix-popper-content-wrapper] {
