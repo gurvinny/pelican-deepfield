@@ -50,20 +50,42 @@ php artisan p:plugin:install   # select "deepfield"
 
 > The folder **must** be named `deepfield` to match the `id` in `plugin.json`. Cloning without the trailing argument leaves it as `pelican-deepfield` and the panel rejects it with a plugin-id mismatch — just rename it.
 
+> **Docker:** the official image roots the panel at `/var/www/html`, so the plugin path is `/var/www/html/plugins/deepfield`. Run the artisan command inside the container (`docker compose exec panel php artisan p:plugin:install`), or just install from ZIP through the panel UI, which works the same on both.
+
 Then hard-refresh the panel (`Ctrl+Shift+R`).
 
 ## Settings
 
-Admin → Plugins → **Deepfield** → Settings. Values are written to `.env` as `DEEPFIELD_*`, so they survive updates.
+Admin → Plugins → **Deepfield** → Settings. Values are written to `.env` as `DEEPFIELD_*`, so they survive updates. The page is grouped into four sections; settings that depend on another one are hidden when their parent is off.
+
+**Background & Atmosphere**
 
 | Setting | Default | Options |
 |---|---|---|
 | Starfield density | Medium | `off` / `low` ~250 / `medium` ~600 / `high` ~1200 |
 | Nebula fog | On | on / off |
 | Nebula hue | Violet | violet · teal · rose |
-| CRT bloom | On | Phosphor glow + scanlines on the server console |
+
+**Server Console**
+
+| Setting | Default | Options |
+|---|---|---|
 | Terminal palette | Cosmic | cosmic · Minecraft Vanilla · Solarized Aurora · Nord Aurora |
-| Reduce motion | Off | Disables parallax + meteors |
+| CRT bloom | On | Phosphor glow around the console frame |
+| CRT scanline density | Normal | `off` / `fine` / `normal` / `heavy` — independent of bloom |
+
+**Motion & Accessibility**
+
+| Setting | Default | Options |
+|---|---|---|
+| Reduce motion | Off | Disables parallax, meteors and the scanline drift. `prefers-reduced-motion` is honored regardless |
+
+**Interface Chrome**
+
+| Setting | Default | Options |
+|---|---|---|
+| Audio cues | Off | Short tone when a server changes state |
+| Tab title suffix | On | Appends ` · Deepfield` to the browser tab title |
 
 ## Screenshots
 
@@ -74,6 +96,9 @@ Admin → Plugins → **Deepfield** → Settings. Values are written to `.env` a
 
 ![Server list](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/02-server-list.png)
 *Server list — fluid card grid on a cosmic backdrop*
+
+![Plugin settings](https://raw.githubusercontent.com/gurvinny/pelican-deepfield/main/screenshots/04-plugin-settings.png)
+*Settings — grouped sections, dependent fields hide themselves*
 
 </div>
 
@@ -89,6 +114,10 @@ Admin → Plugins → **Deepfield** → Settings. Values are written to `.env` a
 Pelican Panel ≥ 1.0 · Filament v5.7 · PHP ≥ 8.3 · any evergreen browser with `backdrop-filter` (Safari 15.4+).
 
 If Pelican bumps to a new major Filament version, open an issue if the compat patch is slow to land.
+
+## Changelog
+
+See [releases](https://github.com/gurvinny/pelican-deepfield/releases) for what changed in each version, including upgrade notes.
 
 ## License
 
