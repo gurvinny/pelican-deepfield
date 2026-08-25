@@ -9,12 +9,108 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Panel;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\File;
 
 class DeepfieldPlugin implements Plugin, HasPluginSettings
 {
     use EnvironmentWriterTrait;
+
+    /**
+     * Every setting, its .env key, and the only values it may hold.
+     *
+     * Anything not listed here is rejected on both read and write. On write this
+     * keeps arbitrary strings out of the .env file; on read it keeps them out of
+     * the markup the render hooks emit.
+     *
+     * @var array<string, array{env: string, type: string, default: mixed, values?: string[]}>
+     */
+    public const SETTINGS = [
+        'star_density' => [
+            'env' => 'DEEPFIELD_STAR_DENSITY',
+            'type' => 'enum',
+            'default' => 'medium',
+            'values' => ['off', 'low', 'medium', 'high'],
+        ],
+        'nebula_enabled' => [
+            'env' => 'DEEPFIELD_NEBULA_ENABLED',
+            'type' => 'bool',
+            'default' => true,
+        ],
+        'nebula_hue' => [
+            'env' => 'DEEPFIELD_NEBULA_HUE',
+            'type' => 'enum',
+            'default' => 'violet',
+            'values' => ['violet', 'teal', 'rose'],
+        ],
+        'crt_bloom' => [
+            'env' => 'DEEPFIELD_CRT_BLOOM',
+            'type' => 'bool',
+            'default' => true,
+        ],
+        'reduce_motion' => [
+            'env' => 'DEEPFIELD_REDUCE_MOTION',
+            'type' => 'bool',
+            'default' => false,
+        ],
+        'terminal_palette' => [
+            'env' => 'DEEPFIELD_TERMINAL_PALETTE',
+            'type' => 'enum',
+            'default' => 'cosmic',
+            'values' => ['cosmic', 'minecraft', 'solarized_aurora', 'nord_aurora'],
+        ],
+        'scanline_density' => [
+            'env' => 'DEEPFIELD_SCANLINE_DENSITY',
+            'type' => 'enum',
+            'default' => 'normal',
+            'values' => ['off', 'fine', 'normal', 'heavy'],
+        ],
+        'audio_cues' => [
+            'env' => 'DEEPFIELD_AUDIO_CUES',
+            'type' => 'bool',
+            'default' => false,
+        ],
+        'tab_title_suffix' => [
+            'env' => 'DEEPFIELD_TAB_TITLE_SUFFIX',
+            'type' => 'bool',
+            'default' => true,
+        ],
+    ];
+
+    /**
+     * Coerce one raw value to its declared type, falling back to the default.
+     *
+     * Accepts the string forms .env produces as well as the native types the
+     * settings form submits.
+     */
+    public static function coerce(string $key, mixed $value): mixed
+    {
+        $spec = self::SETTINGS[$key] ?? null;
+
+        if ($spec === null) {
+            return null;
+        }
+
+        if ($value === null || $value === '') {
+            return $spec['default'];
+        }
+
+        if ($spec['type'] === 'bool') {
+            if (is_bool($value)) {
+                return $value;
+            }
+
+            return match (strtolower((string) $value)) {
+                '1', 'true', 'on', 'yes' => true,
+                '0', 'false', 'off', 'no' => false,
+                default => $spec['default'],
+            };
+        }
+
+        return in_array($value, $spec['values'], true) ? $value : $spec['default'];
+    }
 
     public function getId(): string
     {
@@ -74,25 +170,22 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         }
     }
 
+    /** @return array<string, mixed> */
     protected function settings(): array
     {
-        return [
-            'star_density'     => config('deepfield.star_density', 'medium'),
-            'nebula_enabled'   => (bool) config('deepfield.nebula_enabled', true),
-            'nebula_hue'       => config('deepfield.nebula_hue', 'violet'),
-            'crt_bloom'        => (bool) config('deepfield.crt_bloom', true),
-            'reduce_motion'    => (bool) config('deepfield.reduce_motion', false),
-            'terminal_palette' => config('deepfield.terminal_palette', 'cosmic'),
-            'scanline_density' => config('deepfield.scanline_density', 'normal'),
-            'audio_cues'       => (bool) config('deepfield.audio_cues', false),
-            'tab_title_suffix' => (bool) config('deepfield.tab_title_suffix', true),
-        ];
+        $settings = [];
+
+        foreach (self::SETTINGS as $key => $spec) {
+            $settings[$key] = self::coerce($key, config("deepfield.{$key}", $spec['default']));
+        }
+
+        return $settings;
     }
 
     protected function renderHead(): string
     {
         $settings = htmlspecialchars(json_encode($this->settings()), ENT_QUOTES, 'UTF-8');
-        $cssHref = asset('plugins/deepfield/deepfield.css');
+        $cssHref = $this->asset('deepfield.css');
         $spaceGrotesk = asset('plugins/deepfield/fonts/SpaceGrotesk-Variable.woff2');
         $jetbrains    = asset('plugins/deepfield/fonts/JetBrainsMono-Variable.woff2');
         $orbitron     = asset('plugins/deepfield/fonts/Orbitron-Variable.woff2');
@@ -160,7 +253,6 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
       /* Debug: log the pathname once so we can tune matching if needed */
       if (!window.__dfLogged) {
         window.__dfLogged = true;
-        try { console.info('[Deepfield] route pathname:', location.pathname); } catch(_){}
       }
     }catch(e){}
   }
@@ -334,15 +426,44 @@ HTML;
 
     protected function renderBody(): string
     {
-        $jsSrc = asset('plugins/deepfield/deepfield.js');
-        $scan  = htmlspecialchars(config('deepfield.scanline_density', 'normal'), ENT_QUOTES, 'UTF-8');
+        $jsSrc = $this->asset('deepfield.js');
+
+        // json_encode, not htmlspecialchars: HTML entities are not decoded inside a
+        // <script> element, so escaping for HTML here would emit the literal entity.
+        // coerce() has already reduced this to one of the allowlisted literals.
+        $scan = json_encode(self::coerce('scanline_density', config('deepfield.scanline_density')));
 
         return <<<HTML
 <canvas id="df-nebula" aria-hidden="true"></canvas>
 <canvas id="df-starfield" aria-hidden="true"></canvas>
-<script>document.body.setAttribute('data-df-scan','{$scan}');</script>
+<script>document.body.setAttribute('data-df-scan',{$scan});</script>
 <script defer src="{$jsSrc}"></script>
 HTML;
+    }
+
+    /**
+     * Asset URL with a content hash appended.
+     *
+     * Without this the panel serves the same URL after a plugin update and browsers
+     * keep the previously cached copy, so a shipped fix looks like it did nothing.
+     * A content hash rather than filemtime keeps the URL stable across deploys that
+     * do not change the file, and avoids publishing server timestamps.
+     */
+    protected function asset(string $file): string
+    {
+        static $hashes = [];
+
+        $url = asset("plugins/deepfield/{$file}");
+
+        if (!array_key_exists($file, $hashes)) {
+            $path = public_path("plugins/deepfield/{$file}");
+
+            $hashes[$file] = is_file($path)
+                ? substr(hash_file('xxh128', $path), 0, 8)
+                : null;
+        }
+
+        return $hashes[$file] === null ? $url : "{$url}?v={$hashes[$file]}";
     }
 
     // HasPluginSettings ---------------------------------------------------
@@ -350,75 +471,100 @@ HTML;
     public function getSettingsForm(): array
     {
         return [
-            Select::make('star_density')
-                ->label(trans('deepfield::strings.star_density'))
-                ->helperText(trans('deepfield::strings.star_density_help'))
-                ->options([
-                    'off'    => trans('deepfield::strings.density_off'),
-                    'low'    => trans('deepfield::strings.density_low'),
-                    'medium' => trans('deepfield::strings.density_medium'),
-                    'high'   => trans('deepfield::strings.density_high'),
-                ])
-                ->native(false)
-                ->required(),
+            Section::make(trans('deepfield::strings.section_background'))
+                ->description(trans('deepfield::strings.section_background_help'))
+                ->collapsible()
+                ->schema([
+                    Select::make('star_density')
+                        ->label(trans('deepfield::strings.star_density'))
+                        ->helperText(trans('deepfield::strings.star_density_help'))
+                        ->options([
+                            'off'    => trans('deepfield::strings.density_off'),
+                            'low'    => trans('deepfield::strings.density_low'),
+                            'medium' => trans('deepfield::strings.density_medium'),
+                            'high'   => trans('deepfield::strings.density_high'),
+                        ])
+                        ->native(false)
+                        ->required(),
 
-            Toggle::make('nebula_enabled')
-                ->label(trans('deepfield::strings.nebula_enabled'))
-                ->helperText(trans('deepfield::strings.nebula_enabled_help'))
-                ->inline(false),
+                    Toggle::make('nebula_enabled')
+                        ->label(trans('deepfield::strings.nebula_enabled'))
+                        ->helperText(trans('deepfield::strings.nebula_enabled_help'))
+                        ->live()
+                        ->inline(false),
 
-            Select::make('nebula_hue')
-                ->label(trans('deepfield::strings.nebula_hue'))
-                ->options([
-                    'violet' => trans('deepfield::strings.hue_violet'),
-                    'teal'   => trans('deepfield::strings.hue_teal'),
-                    'rose'   => trans('deepfield::strings.hue_rose'),
-                ])
-                ->native(false)
-                ->required(),
+                    Select::make('nebula_hue')
+                        ->label(trans('deepfield::strings.nebula_hue'))
+                        ->helperText(trans('deepfield::strings.nebula_hue_help'))
+                        ->options([
+                            'violet' => trans('deepfield::strings.hue_violet'),
+                            'teal'   => trans('deepfield::strings.hue_teal'),
+                            'rose'   => trans('deepfield::strings.hue_rose'),
+                        ])
+                        ->native(false)
+                        ->required()
+                        ->visible(fn (Get $get) => (bool) $get('nebula_enabled')),
+                ]),
 
-            Toggle::make('crt_bloom')
-                ->label(trans('deepfield::strings.crt_bloom'))
-                ->helperText(trans('deepfield::strings.crt_bloom_help'))
-                ->inline(false),
+            Section::make(trans('deepfield::strings.section_console'))
+                ->description(trans('deepfield::strings.section_console_help'))
+                ->collapsible()
+                ->schema([
+                    Select::make('terminal_palette')
+                        ->label(trans('deepfield::strings.terminal_palette'))
+                        ->helperText(trans('deepfield::strings.terminal_palette_help'))
+                        ->options([
+                            'cosmic'           => trans('deepfield::strings.palette_cosmic'),
+                            'minecraft'        => trans('deepfield::strings.palette_minecraft'),
+                            'solarized_aurora' => trans('deepfield::strings.palette_solarized'),
+                            'nord_aurora'      => trans('deepfield::strings.palette_nord'),
+                        ])
+                        ->native(false)
+                        ->required(),
 
-            Toggle::make('reduce_motion')
-                ->label(trans('deepfield::strings.reduce_motion'))
-                ->helperText(trans('deepfield::strings.reduce_motion_help'))
-                ->inline(false),
+                    Toggle::make('crt_bloom')
+                        ->label(trans('deepfield::strings.crt_bloom'))
+                        ->helperText(trans('deepfield::strings.crt_bloom_help'))
+                        ->inline(false),
 
-            Select::make('terminal_palette')
-                ->label(trans('deepfield::strings.terminal_palette'))
-                ->helperText(trans('deepfield::strings.terminal_palette_help'))
-                ->options([
-                    'cosmic'           => trans('deepfield::strings.palette_cosmic'),
-                    'minecraft'        => trans('deepfield::strings.palette_minecraft'),
-                    'solarized_aurora' => trans('deepfield::strings.palette_solarized'),
-                    'nord_aurora'      => trans('deepfield::strings.palette_nord'),
-                ])
-                ->native(false)
-                ->required(),
+                    Select::make('scanline_density')
+                        ->label(trans('deepfield::strings.scanline_density'))
+                        ->helperText(trans('deepfield::strings.scanline_density_help'))
+                        ->options([
+                            'off'    => trans('deepfield::strings.scan_off'),
+                            'fine'   => trans('deepfield::strings.scan_fine'),
+                            'normal' => trans('deepfield::strings.scan_normal'),
+                            'heavy'  => trans('deepfield::strings.scan_heavy'),
+                        ])
+                        ->native(false)
+                        ->required(),
+                ]),
 
-            Select::make('scanline_density')
-                ->label(trans('deepfield::strings.scanline_density'))
-                ->helperText(trans('deepfield::strings.scanline_density_help'))
-                ->options([
-                    'fine'   => trans('deepfield::strings.scan_fine'),
-                    'normal' => trans('deepfield::strings.scan_normal'),
-                    'heavy'  => trans('deepfield::strings.scan_heavy'),
-                ])
-                ->native(false)
-                ->required(),
+            Section::make(trans('deepfield::strings.section_motion'))
+                ->description(trans('deepfield::strings.section_motion_help'))
+                ->collapsible()
+                ->schema([
+                    Toggle::make('reduce_motion')
+                        ->label(trans('deepfield::strings.reduce_motion'))
+                        ->helperText(trans('deepfield::strings.reduce_motion_help'))
+                        ->inline(false),
+                ]),
 
-            Toggle::make('audio_cues')
-                ->label(trans('deepfield::strings.audio_cues'))
-                ->helperText(trans('deepfield::strings.audio_cues_help'))
-                ->inline(false),
+            Section::make(trans('deepfield::strings.section_chrome'))
+                ->description(trans('deepfield::strings.section_chrome_help'))
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    Toggle::make('audio_cues')
+                        ->label(trans('deepfield::strings.audio_cues'))
+                        ->helperText(trans('deepfield::strings.audio_cues_help'))
+                        ->inline(false),
 
-            Toggle::make('tab_title_suffix')
-                ->label(trans('deepfield::strings.tab_title_suffix'))
-                ->helperText(trans('deepfield::strings.tab_title_suffix_help'))
-                ->inline(false),
+                    Toggle::make('tab_title_suffix')
+                        ->label(trans('deepfield::strings.tab_title_suffix'))
+                        ->helperText(trans('deepfield::strings.tab_title_suffix_help'))
+                        ->inline(false),
+                ]),
         ];
     }
 
@@ -429,17 +575,22 @@ HTML;
 
     public function saveSettings(array $data): void
     {
-        $this->writeToEnvironment([
-            'DEEPFIELD_STAR_DENSITY'      => $data['star_density'] ?? 'medium',
-            'DEEPFIELD_NEBULA_ENABLED'    => ($data['nebula_enabled'] ?? true) ? 'true' : 'false',
-            'DEEPFIELD_NEBULA_HUE'        => $data['nebula_hue'] ?? 'violet',
-            'DEEPFIELD_CRT_BLOOM'         => ($data['crt_bloom'] ?? true) ? 'true' : 'false',
-            'DEEPFIELD_REDUCE_MOTION'     => ($data['reduce_motion'] ?? false) ? 'true' : 'false',
-            'DEEPFIELD_TERMINAL_PALETTE'  => $data['terminal_palette'] ?? 'cosmic',
-            'DEEPFIELD_SCANLINE_DENSITY'  => $data['scanline_density'] ?? 'normal',
-            'DEEPFIELD_AUDIO_CUES'        => ($data['audio_cues'] ?? false) ? 'true' : 'false',
-            'DEEPFIELD_TAB_TITLE_SUFFIX'  => ($data['tab_title_suffix'] ?? true) ? 'true' : 'false',
-        ]);
+        // Fields hidden by ->visible() are absent from $data. Fall back to the value
+        // currently in effect rather than the default, so collapsing a dependent
+        // field (nebula hue while the fog is off) does not quietly reset it.
+        $current = $this->settings();
+        $values = [];
+
+        foreach (self::SETTINGS as $key => $spec) {
+            $raw = array_key_exists($key, $data) ? $data[$key] : $current[$key];
+            $value = self::coerce($key, $raw);
+
+            $values[$spec['env']] = $spec['type'] === 'bool'
+                ? ($value ? 'true' : 'false')
+                : $value;
+        }
+
+        $this->writeToEnvironment($values);
 
         Notification::make()
             ->title(trans('deepfield::strings.saved'))
