@@ -1,13 +1,22 @@
 <?php
 
+/*
+ * Defaults only.
+ *
+ * At runtime DeepfieldPluginProvider overwrites this whole key with values read
+ * straight from the panel's .env file. env() is deliberately not used here: it
+ * reads the process environment, which silently overrides .env and makes saved
+ * settings appear to revert. See DeepfieldPluginProvider::readSettings().
+ */
+
 return [
-    'star_density'      => env('DEEPFIELD_STAR_DENSITY', 'medium'),
-    'nebula_enabled'    => env('DEEPFIELD_NEBULA_ENABLED', true),
-    'nebula_hue'        => env('DEEPFIELD_NEBULA_HUE', 'violet'),
-    'crt_bloom'         => env('DEEPFIELD_CRT_BLOOM', true),
-    'reduce_motion'     => env('DEEPFIELD_REDUCE_MOTION', false),
-    'terminal_palette'  => env('DEEPFIELD_TERMINAL_PALETTE', 'cosmic'),   // cosmic|minecraft|solarized_aurora|nord_aurora
-    'scanline_density'  => env('DEEPFIELD_SCANLINE_DENSITY', 'normal'),   // fine|normal|heavy
-    'audio_cues'        => env('DEEPFIELD_AUDIO_CUES', false),            // opt-in server state audio
-    'tab_title_suffix'  => env('DEEPFIELD_TAB_TITLE_SUFFIX', true),       // append "· Deepfield"
+    'star_density'      => 'medium',                                     // off|low|medium|high
+    'nebula_enabled'    => true,
+    'nebula_hue'        => 'violet',                                     // violet|teal|rose
+    'crt_bloom'         => true,
+    'reduce_motion'     => false,
+    'terminal_palette'  => 'cosmic',                                     // cosmic|minecraft|solarized_aurora|nord_aurora
+    'scanline_density'  => 'normal',                                     // off|fine|normal|heavy
+    'audio_cues'        => false,                                        // opt-in server state audio
+    'tab_title_suffix'  => true,                                         // append "· Deepfield"
 ];
