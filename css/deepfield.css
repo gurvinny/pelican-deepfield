@@ -187,10 +187,15 @@ html { background: var(--df-bg-void) !important; }
     pointer-events: auto !important;
 }
 
-/* Dropdowns, user menu, floating portals */
+/* Dropdowns, user menu, floating portals.
+   Only the floating panel is lifted, never .fi-dropdown itself. That class is
+   the wrapper around the trigger button and is always in the DOM, so giving it
+   z-index 9800 floated every row's action button above the modal layer (9500):
+   opening a slide-over or modal on a table left a column of stray ⋮ buttons
+   punched through the panel. Teleported panels stay above the modal so selects
+   inside a modal still open over it. */
 .fi-dropdown-panel,
 .fi-user-menu,
-.fi-dropdown,
 [x-teleport],
 [data-floating-ui-portal],
 [data-radix-popper-content-wrapper] {
@@ -224,8 +229,34 @@ html { background: var(--df-bg-void) !important; }
 .fi-ta-ctn .fi-ta-content-grid,
 .fi-ta-ctn .fi-ta-content-grid.md\:fi-grid-cols {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
+    /* 460px floor, not 340px. A server card carries a title row plus three stat
+       columns, and the widest stat reads like "10.72 GB / 40.96 GB". At 340px
+       auto-fill packed in an extra column and every value wrapped onto two
+       lines. 460px gives 1 column on mobile, 2 on a laptop, 3 on a wide
+       desktop, with the values on one line at each step. */
+    /* auto-fit, not auto-fill: auto-fill reserves empty tracks, so three servers
+       on a wide screen left a dead fourth column and squeezed the cards. auto-fit
+       collapses the empties and lets the real cards share the full width. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)) !important;
     gap: 1rem !important;
+}
+
+/* Stat values stay on one line. Width alone covers the common case, but a
+   server with very large figures could still wrap. */
+.fi-ta-ctn .fi-ta-content-grid .fi-ta-text span {
+    white-space: nowrap !important;
+}
+
+/* Egg artwork is an inline-styled absolute fill behind the card contents.
+   Drop it further back so the stat values always read cleanly over it. */
+.fi-ta-ctn .fi-ta-content-grid div[style*="no-repeat"] {
+    opacity: 0.1 !important;
+    z-index: 0 !important;
+}
+.fi-ta-ctn .fi-ta-content-grid .fi-ta-text,
+.fi-ta-ctn .fi-ta-content-grid h2 {
+    position: relative;
+    z-index: 1;
 }
 
 /* Table container should always fill its parent — Filament renders it
@@ -888,12 +919,26 @@ a:hover, .fi-link:hover {
    The xterm instance is encapsulated (not reachable via Alpine.$data or
    Livewire component data), so we can't call fitAddon.fit() directly.
    xterm always renders a screen ~68px taller than its viewport (its
-   internal scrollback rendering). max-height with overflow-y:auto lets
-   the wrapper scroll any excess itself — no clipping, no page sprawl. */
+   internal scrollback rendering), so the excess has to go somewhere.
+
+   That excess used to be absorbed by putting overflow-y:auto on #terminal
+   itself. The side effect: absolutely positioned children of a scroll
+   container scroll with the content, so both pseudo-elements — the chrome
+   bar (::before) and the scanline overlay (::after) — slid out of view as
+   soon as the terminal scrolled at all.
+
+   Keeping #terminal as a fixed frame and letting xterm's own .xterm-viewport
+   do the scrolling (which it already does natively) pins both pseudos and
+   still caps the height. isolation:isolate keeps the overlay compositing
+   against the terminal instead of whatever the page paints behind it. */
 #terminal {
     padding: 2.25rem 0.85rem 0.85rem !important;
     max-height: min(70vh, 720px) !important;
     min-height: 320px !important;
+    overflow: hidden !important;
+    isolation: isolate;
+}
+#terminal .xterm-viewport {
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
@@ -954,40 +999,70 @@ input#send-command {
 }
 #send-command::placeholder { color: var(--df-ink-dim) !important; }
 
-/* CRT overlay — sit ABOVE xterm's WebGL canvas layers (they use z-index 0–4).
-   Scanline density controlled by body[data-df-scan="fine|normal|heavy"]. */
-/* CRT scanline overlay — softened significantly to preserve terminal
-   text readability. Previous opacities (0.06/0.13/0.22) were dense
-   enough to mush log lines together. New values give the CRT texture
-   without fighting the text. */
-body[data-df-crt="1"] #terminal::after {
+/* CRT scanline overlay — sits ABOVE xterm's WebGL canvas layers (z-index 0–4).
+   Driven by body[data-df-scan="off|fine|normal|heavy"], independent of CRT bloom.
+
+   No mix-blend-mode here. `overlay` against a near-black backdrop resolves to
+   2*b*s, which scaled the line color by roughly 0.05 and, stacked on a reduced
+   alpha, drove the rendered contrast to ~1/255 — below the 8-bit quantization
+   floor, so the lines disappeared entirely. Plain alpha compositing is
+   predictable and does not depend on what happens to sit behind the terminal.
+
+   Alpha values sit between the pre-1.1.0 set (0.06/0.13/0.22, which mushed log
+   lines together) and the 1.1.0 set (0.025/0.045/0.09, which was invisible).
+   Density now varies period and line thickness too, so the three steps are
+   actually distinguishable rather than three shades of the same texture. */
+body[data-df-scan="fine"] #terminal::after,
+body[data-df-scan="normal"] #terminal::after,
+body[data-df-scan="heavy"] #terminal::after,
+body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    animation: df-scan 8s linear infinite;
     z-index: 999;
     border-radius: var(--df-radius-lg);
-    opacity: 0.55;
-    mix-blend-mode: overlay;
 }
 
-body[data-df-crt="1"][data-df-scan="fine"] #terminal::after {
+body[data-df-scan="fine"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
         rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(94,234,212,0.025) 3px, rgba(0,0,0,0) 4px);
+        rgba(94,234,212,0.07) 2px, rgba(94,234,212,0.07) 3px);
+    animation: df-scan-fine 9s linear infinite;
 }
-body[data-df-crt="1"][data-df-scan="normal"] #terminal::after,
+body[data-df-scan="normal"] #terminal::after,
 body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
     background: repeating-linear-gradient(to bottom,
         rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
-        rgba(94,234,212,0.045) 4px, rgba(0,0,0,0) 5px);
+        rgba(94,234,212,0.10) 3px, rgba(94,234,212,0.10) 5px);
+    animation: df-scan-normal 9s linear infinite;
 }
-body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
+body[data-df-scan="heavy"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
-        rgba(94,234,212,0.09) 4px, rgba(0,0,0,0) 6px);
-    opacity: 0.75;
+        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 4px,
+        rgba(94,234,212,0.16) 4px, rgba(94,234,212,0.16) 7px);
+    animation: df-scan-heavy 9s linear infinite;
+}
+
+/* HiDPI — a 1px CSS line is half a device pixel at 2x and gets averaged away.
+   Nudge alpha up so the effect reads consistently across display densities. */
+@media (min-resolution: 1.5dppx) {
+    body[data-df-scan="fine"] #terminal::after {
+        background: repeating-linear-gradient(to bottom,
+            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
+            rgba(94,234,212,0.10) 2px, rgba(94,234,212,0.10) 3px);
+    }
+    body[data-df-scan="normal"] #terminal::after,
+    body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
+        background: repeating-linear-gradient(to bottom,
+            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
+            rgba(94,234,212,0.14) 3px, rgba(94,234,212,0.14) 5px);
+    }
+    body[data-df-scan="heavy"] #terminal::after {
+        background: repeating-linear-gradient(to bottom,
+            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 4px,
+            rgba(94,234,212,0.21) 4px, rgba(94,234,212,0.21) 7px);
+    }
 }
 
 /* xterm canvases are drawn absolutely; make sure they don't establish a stacking context that traps our overlay */
@@ -1097,9 +1172,19 @@ body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
     color: var(--df-ink) !important;
 }
 
-@keyframes df-scan {
+/* Travel must be an exact multiple of each gradient's period or the loop snaps.
+   fine 3px x 10, normal 5px x 6, heavy 7px x 4. */
+@keyframes df-scan-fine {
     from { background-position-y: 0; }
-    to   { background-position-y: 32px; }
+    to   { background-position-y: 30px; }
+}
+@keyframes df-scan-normal {
+    from { background-position-y: 0; }
+    to   { background-position-y: 30px; }
+}
+@keyframes df-scan-heavy {
+    from { background-position-y: 0; }
+    to   { background-position-y: 28px; }
 }
 
 /* =============================================================
@@ -1114,7 +1199,7 @@ body[data-df-crt="1"][data-df-scan="heavy"] #terminal::after {
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
     }
-    body[data-df-crt="1"] .fi-server-console::after { animation: none !important; }
+    #terminal::after { animation: none !important; }
 }
 
 /* =============================================================
