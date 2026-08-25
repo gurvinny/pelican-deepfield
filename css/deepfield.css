@@ -229,8 +229,34 @@ html { background: var(--df-bg-void) !important; }
 .fi-ta-ctn .fi-ta-content-grid,
 .fi-ta-ctn .fi-ta-content-grid.md\:fi-grid-cols {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
+    /* 460px floor, not 340px. A server card carries a title row plus three stat
+       columns, and the widest stat reads like "10.72 GB / 40.96 GB". At 340px
+       auto-fill packed in an extra column and every value wrapped onto two
+       lines. 460px gives 1 column on mobile, 2 on a laptop, 3 on a wide
+       desktop, with the values on one line at each step. */
+    /* auto-fit, not auto-fill: auto-fill reserves empty tracks, so three servers
+       on a wide screen left a dead fourth column and squeezed the cards. auto-fit
+       collapses the empties and lets the real cards share the full width. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)) !important;
     gap: 1rem !important;
+}
+
+/* Stat values stay on one line. Width alone covers the common case, but a
+   server with very large figures could still wrap. */
+.fi-ta-ctn .fi-ta-content-grid .fi-ta-text span {
+    white-space: nowrap !important;
+}
+
+/* Egg artwork is an inline-styled absolute fill behind the card contents.
+   Drop it further back so the stat values always read cleanly over it. */
+.fi-ta-ctn .fi-ta-content-grid div[style*="no-repeat"] {
+    opacity: 0.1 !important;
+    z-index: 0 !important;
+}
+.fi-ta-ctn .fi-ta-content-grid .fi-ta-text,
+.fi-ta-ctn .fi-ta-content-grid h2 {
+    position: relative;
+    z-index: 1;
 }
 
 /* Table container should always fill its parent — Filament renders it
