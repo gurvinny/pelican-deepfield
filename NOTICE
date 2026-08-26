@@ -1,0 +1,22 @@
+Deepfield
+Copyright (c) 2026 @gurvinny
+
+This product includes third-party components distributed under their own
+licenses. The MIT license in LICENSE applies to Deepfield itself and does not
+apply to the components listed below.
+
+--------------------------------------------------------------------------------
+Bundled fonts
+--------------------------------------------------------------------------------
+
+The following typefaces are bundled in fonts/ and are distributed under the
+SIL Open Font License, Version 1.1. Their full license texts are included
+alongside them.
+
+  Space Grotesk    fonts/SpaceGrotesk-Variable.woff2    fonts/OFL.SpaceGrotesk.txt
+  JetBrains Mono   fonts/JetBrainsMono-Variable.woff2   fonts/OFL.JetBrainsMono.txt
+  Orbitron         fonts/Orbitron-Variable.woff2        fonts/OFL.Orbitron.txt
+
+The SIL Open Font License permits redistribution of these fonts, including
+when bundled with software, provided the license text accompanies them and the
+fonts are not sold on their own. Both conditions are met by this distribution.
