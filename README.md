@@ -121,6 +121,8 @@ See [releases](https://github.com/gurvinny/pelican-deepfield/releases) for what 
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Bundled fonts are OFL 1.1 (`fonts/OFL.*.txt`): **Space Grotesk**, **JetBrains Mono**, **Orbitron**.
+MIT — see [`LICENSE`](LICENSE).
+
+Bundled fonts are **SIL OFL 1.1**, not MIT: **Space Grotesk**, **JetBrains Mono** and **Orbitron**. Their license texts ship alongside them in `fonts/OFL.*.txt`, and the attribution is recorded in [`NOTICE`](NOTICE).
 
 Made by [@gurvinny](https://github.com/gurvinny).
