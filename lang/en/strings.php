@@ -3,6 +3,9 @@
 return [
     'saved'                => 'Deepfield settings saved.',
 
+    'section_theme'           => 'Theme Mode & Colors',
+    'section_theme_help'      => 'How Deepfield sits alongside the panel\'s own theme switcher and any other theme plugin you have installed.',
+
     'section_background'      => 'Background & Atmosphere',
     'section_background_help' => 'The canvas layers that drift behind every page. These are the settings to turn down first on older hardware.',
 
@@ -14,6 +17,18 @@ return [
 
     'section_chrome'          => 'Interface Chrome',
     'section_chrome_help'     => 'Small cosmetic touches outside the main theme.',
+
+    'theme_mode'           => 'Default theme mode',
+    'theme_mode_help'      => 'What new users get before they pick for themselves. Deepfield ships both a dark and a light palette. This is only a default — the panel\'s theme switcher still belongs to each user, and their choice is remembered.',
+    'mode_dark'            => 'Dark — deep cosmic (default)',
+    'mode_light'           => 'Light — cool observatory white',
+    'mode_system'          => 'Follow the operating system',
+
+    'panel_colors'         => 'Apply Deepfield\'s component colors',
+    'panel_colors_help'    => 'Sets Filament\'s primary / gray / danger / success / warning / info roles to match the theme. Turn this off to hand those colors to another plugin, such as Theme Customizer, and Deepfield will leave them alone.',
+
+    'console_always_dark'  => 'Keep the console dark in light mode',
+    'console_always_dark_help' => 'A terminal is a dark object, so by default the console screen keeps its dark palette even when the rest of the panel is light. Turn this off to let the console follow the light theme too — note that all four terminal palettes above are dark-on-dark, so a light console uses one shared light palette instead and the Minecraft preset stops matching vanilla 1:1.',
 
     'star_density'         => 'Starfield density',
     'star_density_help'    => 'How many stars drift behind your panel. Lower it if you notice fan spin on older hardware.',

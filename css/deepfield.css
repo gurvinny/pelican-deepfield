@@ -27,68 +27,207 @@
     font-display: swap;
 }
 
-/* ---- Token layer --------------------------------------------- */
+/* ---- Token layer ---------------------------------------------
+ * Deepfield ships two palettes and one set of rules. Every colour below
+ * resolves through a --df-rgb-* channel triple, so a mode is a token swap
+ * rather than a second copy of the stylesheet.
+ *
+ *   :root      geometry, then the LIGHT palette (Deepfield at noon)
+ *   html.dark  the DARK palette (the original deep-cosmic look)
+ *
+ * Light is the base because Filament's default is light: if the panel is
+ * mid-boot, or the user picked light, or another plugin owns the theme mode,
+ * the palette that applies is the one that matches the panel's own chrome.
+ * ------------------------------------------------------------- */
 :root {
-    /* Backdrop */
-    --df-bg-void:      #050614;
-    --df-bg-deep:      #0b0a1e;
-    --df-bg-shelf:     #12112a;
-    --df-bg-lift:      #191835;
-
-    /* Ink */
-    --df-ink:          #e8ecff;
-    --df-ink-soft:     #c8cff0;
-    --df-ink-muted:    #8b90b8;
-    --df-ink-dim:      #5b608a;
-
-    /* Accents */
-    --df-violet:       #a78bfa;
-    --df-violet-deep:  #7c5cf0;
-    --df-cyan:         #38e1ff;
-    --df-teal:         #5eead4;
-    --df-magenta:      #f472b6;
-
-    /* Aurora gradient */
-    --df-aurora:       linear-gradient(120deg, var(--df-cyan) 0%, var(--df-teal) 50%, var(--df-violet) 100%);
-    --df-aurora-soft:  linear-gradient(120deg, rgba(56,225,255,0.16), rgba(94,234,212,0.16), rgba(167,139,250,0.20));
-
-    /* Glass — heavy tint to protect readability */
-    --df-glass-sidebar: rgba(11, 10, 30, 0.82);
-    --df-glass-topbar:  rgba(11, 10, 30, 0.72);
-    --df-glass-card:    rgba(16, 15, 36, 0.86);
-    --df-glass-modal:   rgba(11, 10, 30, 0.96);
-    --df-glass-border:  rgba(167, 139, 250, 0.22);
-    --df-glass-border-strong: rgba(167, 139, 250, 0.36);
-
-    /* Glow */
-    --df-glow-h1:      0 0 24px rgba(94, 234, 212, 0.35), 0 0 48px rgba(167, 139, 250, 0.18);
-    --df-glow-focus:   0 0 0 2px rgba(56, 225, 255, 0.55), 0 0 18px rgba(56, 225, 255, 0.35);
-    --df-glow-primary: 0 0 20px rgba(94, 234, 212, 0.28), 0 0 40px rgba(167, 139, 250, 0.18);
-
-    /* Status colors — conventional semantics, aurora-lifted */
-    --df-status-running:   #34d399;
-    --df-status-starting:  #facc15;
-    --df-status-stopping:  #fb923c;
-    --df-status-offline:   #f87171;
-
-    --df-status-running-glow:  0 0 12px rgba(52, 211, 153, 0.55);
-    --df-status-starting-glow: 0 0 12px rgba(250, 204, 21, 0.55);
-    --df-status-stopping-glow: 0 0 12px rgba(251, 146, 60, 0.55);
-    --df-status-offline-glow:  0 0 12px rgba(248, 113, 113, 0.55);
-
-    /* Radii + easing — tighter, universal.
+    /* Radii + easing — tighter, universal. Shared by both modes.
        Every rounded surface (cards, sections, modals, inputs, buttons, terminal)
        pulls from ONE of these three tokens. Never hardcode radii elsewhere. */
     --df-radius-sm: 4px;
     --df-radius-md: 6px;
     --df-radius-lg: 8px;
     --df-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---- LIGHT palette: cool observatory white ----------------
+       Near-white with a faint violet cast. The aurora accents are the dark
+       theme's hues walked down in lightness until they clear 4.5:1 on white,
+       so the two modes read as one theme rather than two. */
+
+    /* Surfaces, lightest to most recessed */
+    --df-rgb-void:        246 247 252;  /* page backdrop  #f6f7fc */
+    --df-rgb-deep:        255 255 255;  /* sidebar / topbar / modal glass */
+    --df-rgb-card:        255 255 255;
+    --df-rgb-shelf:       238 240 248;
+    --df-rgb-lift:        231 234 246;
+    --df-rgb-abyss:       203 210 230;
+
+    /* Ink, strongest to faintest */
+    --df-rgb-ink:          20  22  43;  /* #14162b */
+    --df-rgb-ink-soft:     47  51  82;
+    --df-rgb-ink-muted:    91  96 138;  /* #5b608a */
+    --df-rgb-ink-dim:     101 107 145;  /* #656b91 */
+
+    /* Accents — deepened cyan / teal / violet */
+    --df-rgb-cyan:         14 116 144;  /* #0e7490 */
+    --df-rgb-teal:         15 118 110;  /* #0f766e */
+    --df-rgb-violet:      109  40 217;  /* #6d28d9 */
+    --df-rgb-violet-deep:  91  33 182;
+    --df-rgb-magenta:     190  24  93;
+    --df-rgb-rose:        225  29  72;
+
+    /* Status — darkened until legible on white. Amber especially: the dark
+       theme's #facc15 is invisible on a light surface. */
+    --df-rgb-running:       4 120  87;  /* #047857 */
+    --df-rgb-starting:    161  82  10;  /* #a1520a */
+    --df-rgb-stopping:    194  65  12;
+    --df-rgb-offline:     200  30  30;  /* #c81e1e */
+
+    /* A "highlight" is a lift away from the surface, so on white it has to be
+       ink rather than white. */
+    --df-rgb-highlight:    20  22  43;
+
+    /* Shadows: slate rather than pure black, and scaled down. A shadow tuned
+       to read against near-black is a bruise on white. */
+    --df-rgb-shadow:       30  41  59;
+    --df-shadow-k:        0.30;
+
+    /* Display face. Orbitron is a dark-mode signature — at light-mode
+       contrast its wide geometric strokes read as shouting, so the UI face
+       carries headings instead. */
+    --df-font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --df-display-weight: 700;
+    --df-display-tracking: -0.01em;
+
+    /* Named colours, derived so they follow the palette automatically. */
+    --df-bg-void:      rgb(var(--df-rgb-void));
+    --df-bg-deep:      rgb(var(--df-rgb-deep));
+    --df-bg-shelf:     rgb(var(--df-rgb-shelf));
+    --df-bg-lift:      rgb(var(--df-rgb-lift));
+
+    --df-ink:          rgb(var(--df-rgb-ink));
+    --df-ink-soft:     rgb(var(--df-rgb-ink-soft));
+    --df-ink-muted:    rgb(var(--df-rgb-ink-muted));
+    --df-ink-dim:      rgb(var(--df-rgb-ink-dim));
+
+    --df-violet:       rgb(var(--df-rgb-violet));
+    --df-violet-deep:  rgb(var(--df-rgb-violet-deep));
+    --df-cyan:         rgb(var(--df-rgb-cyan));
+    --df-teal:         rgb(var(--df-rgb-teal));
+    --df-magenta:      rgb(var(--df-rgb-magenta));
+
+    --df-status-running:   rgb(var(--df-rgb-running));
+    --df-status-starting:  rgb(var(--df-rgb-starting));
+    --df-status-stopping:  rgb(var(--df-rgb-stopping));
+    --df-status-offline:   rgb(var(--df-rgb-offline));
+
+    --df-aurora:       linear-gradient(120deg, var(--df-cyan) 0%, var(--df-teal) 50%, var(--df-violet) 100%);
+    --df-aurora-soft:  linear-gradient(120deg, rgb(var(--df-rgb-cyan) / 0.10), rgb(var(--df-rgb-teal) / 0.10), rgb(var(--df-rgb-violet) / 0.12));
+
+    /* Glass — on white the tint is a veil, not a blackout, so alphas are
+       higher and the borders carry the definition instead. */
+    --df-glass-sidebar: rgb(var(--df-rgb-deep) / 0.88);
+    --df-glass-topbar:  rgb(var(--df-rgb-deep) / 0.80);
+    --df-glass-card:    rgb(var(--df-rgb-card) / 0.92);
+    --df-glass-modal:   rgb(var(--df-rgb-deep) / 0.98);
+    --df-glass-border:  rgb(var(--df-rgb-violet) / 0.18);
+    --df-glass-border-strong: rgb(var(--df-rgb-violet) / 0.32);
+
+    /* Glow reads as a smudge on white. Headings drop it entirely; focus keeps
+       a ring because it is an affordance, not decoration. */
+    /* Text on an accent fill. The light aurora is deep enough that its label
+       has to be white, where the dark theme's bright aurora needs near-black. */
+    --df-on-accent:    rgb(var(--df-rgb-deep));
+
+    --df-glow-h1:      none;
+    --df-glow-focus:   0 0 0 2px rgb(var(--df-rgb-cyan) / 0.75);
+    --df-glow-primary: 0 1px 2px rgb(var(--df-rgb-shadow) / calc(0.5 * var(--df-shadow-k)));
+
+    --df-status-running-glow:  0 0 0 1px rgb(var(--df-rgb-running) / 0.35);
+    --df-status-starting-glow: 0 0 0 1px rgb(var(--df-rgb-starting) / 0.35);
+    --df-status-stopping-glow: 0 0 0 1px rgb(var(--df-rgb-stopping) / 0.35);
+    --df-status-offline-glow:  0 0 0 1px rgb(var(--df-rgb-offline) / 0.35);
+}
+
+/* ---- DARK palette: deep cosmic (the original) -----------------
+ * The second selector is the console opt-out: a terminal is a dark object,
+ * so in light mode the page chrome goes light while the screen itself keeps
+ * this palette unless the admin turns that off. Custom properties inherit,
+ * so re-declaring the triples on #terminal is enough for every rule below —
+ * and it keeps the four xterm palettes, including the 1:1 Minecraft one,
+ * valid as shipped.
+ * -------------------------------------------------------------- */
+html.dark,
+html:not(.dark) body[data-df-console="dark"] #terminal {
+    --df-rgb-void:          5   6  20;  /* #050614 */
+    --df-rgb-deep:         11  10  30;  /* #0b0a1e */
+    --df-rgb-card:         16  15  36;
+    --df-rgb-shelf:        18  17  42;
+    --df-rgb-lift:         25  24  53;
+    --df-rgb-abyss:         3   4  12;
+
+    --df-rgb-ink:         232 236 255;  /* #e8ecff */
+    --df-rgb-ink-soft:    200 207 240;
+    --df-rgb-ink-muted:   139 144 184;
+    --df-rgb-ink-dim:      91  96 138;
+
+    --df-rgb-cyan:         56 225 255;  /* #38e1ff */
+    --df-rgb-teal:         94 234 212;  /* #5eead4 */
+    --df-rgb-violet:      167 139 250;  /* #a78bfa */
+    --df-rgb-violet-deep: 124  92 240;
+    --df-rgb-magenta:     244 114 182;
+    --df-rgb-rose:        244  63  94;
+
+    --df-rgb-running:      52 211 153;
+    --df-rgb-starting:    250 204  21;
+    --df-rgb-stopping:    251 146  60;
+    --df-rgb-offline:     248 113 113;
+
+    --df-rgb-highlight:   255 255 255;
+
+    --df-rgb-shadow:        0   0   0;
+    --df-shadow-k:        1.00;
+
+    --df-font-display: 'Orbitron', 'Space Grotesk', sans-serif;
+    --df-display-weight: 600;
+    --df-display-tracking: 0.035em;
+
+    --df-aurora-soft:  linear-gradient(120deg, rgb(var(--df-rgb-cyan) / 0.16), rgb(var(--df-rgb-teal) / 0.16), rgb(var(--df-rgb-violet) / 0.20));
+
+    /* Glass — heavy tint to protect readability */
+    --df-glass-sidebar: rgb(var(--df-rgb-deep) / 0.82);
+    --df-glass-topbar:  rgb(var(--df-rgb-deep) / 0.72);
+    --df-glass-card:    rgb(var(--df-rgb-card) / 0.86);
+    --df-glass-modal:   rgb(var(--df-rgb-deep) / 0.96);
+    --df-glass-border:  rgb(var(--df-rgb-violet) / 0.22);
+    --df-glass-border-strong: rgb(var(--df-rgb-violet) / 0.36);
+
+    --df-on-accent:    #060614;
+
+    --df-glow-h1:      0 0 24px rgb(var(--df-rgb-teal) / 0.35), 0 0 48px rgb(var(--df-rgb-violet) / 0.18);
+    --df-glow-focus:   0 0 0 2px rgb(var(--df-rgb-cyan) / 0.55), 0 0 18px rgb(var(--df-rgb-cyan) / 0.35);
+    --df-glow-primary: 0 0 20px rgb(var(--df-rgb-teal) / 0.28), 0 0 40px rgb(var(--df-rgb-violet) / 0.18);
+
+    --df-status-running-glow:  0 0 12px rgb(var(--df-rgb-running) / 0.55);
+    --df-status-starting-glow: 0 0 12px rgb(var(--df-rgb-starting) / 0.55);
+    --df-status-stopping-glow: 0 0 12px rgb(var(--df-rgb-stopping) / 0.55);
+    --df-status-offline-glow:  0 0 12px rgb(var(--df-rgb-offline) / 0.55);
 }
 
 /* ---- Canvas backdrop layers ----------------------------------
    Put the cosmic background on <html> so <body> can stay transparent
    and the canvases can layer at z-index 0/1 without covering anything. */
 html { background: var(--df-bg-void) !important; }
+
+/* Light mode keeps the backdrop but inverts the metaphor: a daylight sky
+   rather than deep space. The gradient does the work the void colour does in
+   dark mode; the canvases draw drifting motes and a soft aurora haze over it. */
+html:not(.dark) {
+    background:
+        radial-gradient(120% 85% at 50% -10%, rgb(var(--df-rgb-cyan) / 0.07) 0%, transparent 60%),
+        radial-gradient(90% 70% at 85% 110%, rgb(var(--df-rgb-violet) / 0.07) 0%, transparent 65%),
+        var(--df-bg-void) !important;
+    background-attachment: fixed !important;
+}
 
 #df-nebula,
 #df-starfield {
@@ -102,6 +241,11 @@ html { background: var(--df-bg-void) !important; }
 
 #df-nebula    { z-index: 0; opacity: 0.55; }
 #df-starfield { z-index: 1; }
+
+/* On white there is far less headroom before the backdrop starts competing
+   with body text, so both layers are pulled back hard. */
+html:not(.dark) #df-nebula    { opacity: 0.30; }
+html:not(.dark) #df-starfield { opacity: 0.55; }
 
 /* Only the primary layout wrappers get lifted — dropdowns / modals /
    notifications portal directly to <body> and MUST NOT be reparented into
@@ -163,7 +307,7 @@ html { background: var(--df-bg-void) !important; }
     background: var(--df-glass-modal) !important;
     border-left: 1px solid var(--df-glass-border-strong) !important;
     border-radius: 0 !important;
-    box-shadow: -30px 0 80px -20px rgba(0, 0, 0, 0.7) !important;
+    box-shadow: -30px 0 80px -20px rgb(var(--df-rgb-shadow) / calc(0.7 * var(--df-shadow-k))) !important;
 }
 
 /* Centered modal window */
@@ -174,7 +318,7 @@ html { background: var(--df-bg-void) !important; }
     background: var(--df-glass-modal) !important;
     border: 1px solid var(--df-glass-border-strong) !important;
     border-radius: var(--df-radius-lg) !important;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 0 30px 80px -20px rgb(var(--df-rgb-shadow) / calc(0.7 * var(--df-shadow-k))) !important;
 }
 
 .fi-modal-window,
@@ -298,15 +442,12 @@ body {
     font-feature-settings: 'ss01', 'cv11';
 }
 
-/* Force dark; hide every theme switcher UI (Deepfield is dark-only). */
-html { color-scheme: dark; }
-[aria-label*="Toggle theme" i],
-[aria-label*="theme mode" i],
-.fi-theme-switcher,
-.fi-theme-switcher-btn,
-[role="group"]:has(.fi-theme-switcher-btn) {
-    display: none !important;
-}
+/* Both modes are first-class, so the theme switcher stays visible and stays
+   the user's to operate. Deepfield used to hide it here and pin the stored
+   choice to dark; that is what made the theme switcher and the Theme
+   Customizer plugin look broken. */
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
 
 /* Sidebar notifications button — Filament's default puts a full-width
    "Notifications" bar in the sidebar footer, directly above the profile
@@ -370,7 +511,7 @@ html { color-scheme: dark; }
     background: var(--df-glass-card) !important;
     border: 1px solid var(--df-glass-border-strong) !important;
     border-radius: var(--df-radius-md) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 225, 255, 0.12) !important;
+    box-shadow: 0 4px 12px rgb(var(--df-rgb-shadow) / calc(0.4 * var(--df-shadow-k))), 0 0 20px rgb(var(--df-rgb-cyan) / 0.12) !important;
     color: var(--df-ink) !important;
     z-index: 60 !important;
     position: fixed !important;
@@ -379,8 +520,8 @@ html { color-scheme: dark; }
     transition: left 260ms var(--df-ease-out), transform 260ms var(--df-ease-out) !important;
 }
 .fi-layout-sidebar-toggle-btn:hover {
-    border-color: rgba(56, 225, 255, 0.55) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 24px rgba(56, 225, 255, 0.30) !important;
+    border-color: rgb(var(--df-rgb-cyan) / 0.55) !important;
+    box-shadow: 0 4px 12px rgb(var(--df-rgb-shadow) / calc(0.4 * var(--df-shadow-k))), 0 0 24px rgb(var(--df-rgb-cyan) / 0.30) !important;
 }
 /* When sidebar is open on narrow, park the toggle JUST OUTSIDE the
    sidebar's right edge (sidebar is 320px wide) so it doesn't overlap
@@ -406,7 +547,7 @@ html { color-scheme: dark; }
     min-width: 36px !important;
     padding: 0 !important;
     border-radius: var(--df-radius-md) !important;
-    background: rgba(11, 10, 30, 0.85) !important;
+    background: rgb(var(--df-rgb-deep) / 0.85) !important;
     border: 1px solid var(--df-glass-border) !important;
     display: flex !important;
     align-items: center !important;
@@ -458,9 +599,9 @@ code, kbd, samp, pre,
 .fi-simple-header-heading,
 h1.fi-header-heading,
 .fi-modal-heading {
-    font-family: 'Orbitron', 'Space Grotesk', sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.035em;
+    font-family: var(--df-font-display);
+    font-weight: var(--df-display-weight);
+    letter-spacing: var(--df-display-tracking);
     text-shadow: var(--df-glow-h1);
 }
 
@@ -472,7 +613,7 @@ aside.fi-sidebar,
     -webkit-backdrop-filter: blur(24px) saturate(1.25);
     backdrop-filter: blur(24px) saturate(1.25);
     border-right: 1px solid var(--df-glass-border);
-    box-shadow: 0 0 60px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 60px rgb(var(--df-rgb-shadow) / calc(0.35 * var(--df-shadow-k)));
 }
 
 .fi-sidebar-header {
@@ -502,7 +643,7 @@ aside.fi-sidebar,
 }
 
 .fi-sidebar-item-button:hover {
-    background: rgba(167, 139, 250, 0.08) !important;
+    background: rgb(var(--df-rgb-violet) / 0.08) !important;
     color: var(--df-ink) !important;
 }
 
@@ -512,7 +653,7 @@ aside.fi-sidebar,
 .fi-sidebar-item-button.fi-active {
     background: var(--df-aurora-soft) !important;
     color: var(--df-ink) !important;
-    box-shadow: inset 3px 0 0 0 var(--df-cyan), 0 0 24px rgba(56, 225, 255, 0.15);
+    box-shadow: inset 3px 0 0 0 var(--df-cyan), 0 0 24px rgb(var(--df-rgb-cyan) / 0.15);
 }
 
 .fi-sidebar-item-active > .fi-sidebar-item-button::before,
@@ -556,8 +697,8 @@ main.fi-main {
     border: 1px solid var(--df-glass-border);
     border-radius: var(--df-radius-lg);
     box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.04) inset,
-        0 10px 30px -12px rgba(0, 0, 0, 0.55);
+        0 1px 0 rgb(var(--df-rgb-highlight) / 0.04) inset,
+        0 10px 30px -12px rgb(var(--df-rgb-shadow) / calc(0.55 * var(--df-shadow-k)));
     /* NOTE: no backdrop-filter here — it creates a new containing block
        for `position: fixed` descendants, which breaks Alpine floating-ui
        dropdown positioning (panels attach to the card, not the viewport). */
@@ -691,7 +832,7 @@ tr {
 }
 
 tbody.fi-ta-body tr:hover {
-    background: rgba(167, 139, 250, 0.06) !important;
+    background: rgb(var(--df-rgb-violet) / 0.06) !important;
 }
 
 /* ---- Modals + slide-overs + dropdowns (near opaque) ----------- */
@@ -702,7 +843,7 @@ tbody.fi-ta-body tr:hover {
     background: var(--df-glass-modal) !important;
     border: 1px solid var(--df-glass-border-strong);
     border-radius: var(--df-radius-lg);
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 0 40px rgba(167, 139, 250, 0.12);
+    box-shadow: 0 30px 80px -20px rgb(var(--df-rgb-shadow) / calc(0.7 * var(--df-shadow-k))), 0 0 40px rgb(var(--df-rgb-violet) / 0.12);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
@@ -711,7 +852,7 @@ tbody.fi-ta-body tr:hover {
    Heavy overlays make notification / small-modal opens feel like the whole
    page has crashed. Filament closes on overlay click; we just help it feel light. */
 .fi-modal-close-overlay {
-    background: rgba(3, 4, 12, 0.45) !important;
+    background: rgb(var(--df-rgb-abyss) / 0.45) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
 }
@@ -721,7 +862,7 @@ tbody.fi-ta-body tr:hover {
    lives inside the styled box. The input itself stays transparent. */
 .fi-input-wrp,
 .fi-select-input-wrp {
-    background: rgba(5, 6, 20, 0.6) !important;
+    background: rgb(var(--df-rgb-void) / 0.6) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-md) !important;
     transition: box-shadow 180ms var(--df-ease-out), border-color 180ms var(--df-ease-out);
@@ -751,7 +892,7 @@ textarea.fi-textarea {
 /* Standalone textareas / inputs without a wrapper still need chrome */
 textarea.fi-textarea:not(.fi-input-wrp textarea),
 .fi-textarea:not(.fi-input-wrp *) {
-    background: rgba(5, 6, 20, 0.6) !important;
+    background: rgb(var(--df-rgb-void) / 0.6) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-md) !important;
 }
@@ -795,36 +936,47 @@ textarea.fi-textarea:not(.fi-input-wrp textarea),
 
 .fi-btn:active { transform: translateY(1px); }
 
-/* Primary — aurora gradient fill with glow */
-.fi-btn-color-primary,
-.fi-btn[class*="primary"] {
+/* Primary — aurora gradient fill with glow.
+   Gated on data-df-colors, which mirrors the "Apply Deepfield's component
+   colors" setting. Without the gate this rule's !important won the primary
+   button back even with the setting off, so the toggle appeared to work for
+   nav and icons but not for the most visible control on the page. The button
+   is where an admin looks to confirm their chosen primary took effect, so it
+   has to be released along with Filament's colour roles. */
+body[data-df-colors="1"] .fi-btn-color-primary,
+body[data-df-colors="1"] .fi-btn[class*="primary"] {
     background: var(--df-aurora) !important;
-    color: #060614 !important;
+    color: var(--df-on-accent) !important;
     border: none !important;
     box-shadow: var(--df-glow-primary);
     font-weight: 600;
 }
 
-.fi-btn-color-primary:hover,
-.fi-btn[class*="primary"]:hover {
-    box-shadow: 0 0 28px rgba(94, 234, 212, 0.45), 0 0 56px rgba(167, 139, 250, 0.25);
+body[data-df-colors="1"] .fi-btn-color-primary:hover,
+body[data-df-colors="1"] .fi-btn[class*="primary"]:hover {
+    box-shadow: 0 0 28px rgb(var(--df-rgb-teal) / 0.45), 0 0 56px rgb(var(--df-rgb-violet) / 0.25);
     filter: brightness(1.06);
+}
+
+/* Deepfield still owns the button's shape and weight in both states — only the
+   colour is handed over. */
+.fi-btn[class*="primary"] {
+    font-weight: 600;
 }
 
 /* Secondary / ghost — glass */
 .fi-btn-color-gray,
 .fi-btn:not([class*="primary"]):not([class*="danger"]):not([class*="warning"]):not([class*="success"]) {
-    background: rgba(167, 139, 250, 0.08);
+    background: rgb(var(--df-rgb-violet) / 0.08);
     color: var(--df-ink-soft);
     border: 1px solid var(--df-glass-border);
 }
 
-/* Danger */
-.fi-btn-color-danger { box-shadow: 0 0 18px rgba(244, 63, 94, 0.28); }
-/* Success */
-.fi-btn-color-success { box-shadow: 0 0 18px rgba(52, 211, 153, 0.28); }
-/* Warning */
-.fi-btn-color-warning { box-shadow: 0 0 18px rgba(250, 204, 21, 0.28); }
+/* Danger / Success / Warning — glow only, in Deepfield's own hues, so these
+   are gated with the rest of the colour roles. */
+body[data-df-colors="1"] .fi-btn-color-danger  { box-shadow: 0 0 18px rgb(var(--df-rgb-rose) / 0.28); }
+body[data-df-colors="1"] .fi-btn-color-success { box-shadow: 0 0 18px rgb(var(--df-rgb-running) / 0.28); }
+body[data-df-colors="1"] .fi-btn-color-warning { box-shadow: 0 0 18px rgb(var(--df-rgb-starting) / 0.28); }
 
 /* ---- Badges (status semantics + glow) ------------------------ */
 .fi-badge {
@@ -837,35 +989,35 @@ textarea.fi-textarea:not(.fi-input-wrp textarea),
 .fi-badge-color-success,
 .fi-badge[class*="running"],
 [data-status="running"] .fi-badge {
-    background: rgba(52, 211, 153, 0.12) !important;
+    background: rgb(var(--df-rgb-running) / 0.12) !important;
     color: var(--df-status-running) !important;
-    border-color: rgba(52, 211, 153, 0.36);
+    border-color: rgb(var(--df-rgb-running) / 0.36);
     box-shadow: var(--df-status-running-glow);
 }
 
 .fi-badge-color-warning,
 .fi-badge[class*="starting"],
 [data-status="starting"] .fi-badge {
-    background: rgba(250, 204, 21, 0.12) !important;
+    background: rgb(var(--df-rgb-starting) / 0.12) !important;
     color: var(--df-status-starting) !important;
-    border-color: rgba(250, 204, 21, 0.36);
+    border-color: rgb(var(--df-rgb-starting) / 0.36);
     box-shadow: var(--df-status-starting-glow);
 }
 
 .fi-badge[class*="stopping"],
 [data-status="stopping"] .fi-badge {
-    background: rgba(251, 146, 60, 0.12) !important;
+    background: rgb(var(--df-rgb-stopping) / 0.12) !important;
     color: var(--df-status-stopping) !important;
-    border-color: rgba(251, 146, 60, 0.36);
+    border-color: rgb(var(--df-rgb-stopping) / 0.36);
     box-shadow: var(--df-status-stopping-glow);
 }
 
 .fi-badge-color-danger,
 .fi-badge[class*="offline"],
 [data-status="offline"] .fi-badge {
-    background: rgba(248, 113, 113, 0.12) !important;
+    background: rgb(var(--df-rgb-offline) / 0.12) !important;
     color: var(--df-status-offline) !important;
-    border-color: rgba(248, 113, 113, 0.36);
+    border-color: rgb(var(--df-rgb-offline) / 0.36);
     box-shadow: var(--df-status-offline-glow);
 }
 
@@ -877,23 +1029,23 @@ a, .fi-link {
 }
 a:hover, .fi-link:hover {
     color: var(--df-teal);
-    text-shadow: 0 0 8px rgba(94, 234, 212, 0.4);
+    text-shadow: 0 0 8px rgb(var(--df-rgb-teal) / 0.4);
 }
 
 /* ---- Scrollbar ----------------------------------------------- */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(167, 139, 250, 0.35) transparent;
+    scrollbar-color: rgb(var(--df-rgb-violet) / 0.35) transparent;
 }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-    background: rgba(167, 139, 250, 0.28);
+    background: rgb(var(--df-rgb-violet) / 0.28);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
 }
-*::-webkit-scrollbar-thumb:hover { background: rgba(94, 234, 212, 0.4); background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: rgb(var(--df-rgb-teal) / 0.4); background-clip: padding-box; }
 
 /* =============================================================
  * Server console — terminal-first, with optional CRT bloom
@@ -910,9 +1062,9 @@ a:hover, .fi-link:hover {
     position: relative;
     overflow: hidden;
     box-shadow:
-        0 0 40px rgba(56, 225, 255, 0.10),
-        inset 0 0 80px rgba(11, 10, 30, 0.7),
-        0 20px 40px -20px rgba(0, 0, 0, 0.6);
+        0 0 40px rgb(var(--df-rgb-cyan) / 0.10),
+        inset 0 0 80px rgb(var(--df-rgb-deep) / 0.7),
+        0 20px 40px -20px rgb(var(--df-rgb-shadow) / calc(0.6 * var(--df-shadow-k)));
 }
 
 /* Terminal chrome — CRT monitor top bar.
@@ -952,11 +1104,11 @@ a:hover, .fi-link:hover {
     display: flex;
     align-items: center;
     padding: 0 1.25rem;
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--df-font-display);
     font-size: 0.68rem;
     letter-spacing: 0.42em;
-    color: rgba(94, 234, 212, 0.72);
-    background: linear-gradient(180deg, rgba(11, 10, 30, 0.94), rgba(11, 10, 30, 0.55));
+    color: rgb(var(--df-rgb-teal) / 0.72);
+    background: linear-gradient(180deg, rgb(var(--df-rgb-deep) / 0.94), rgb(var(--df-rgb-deep) / 0.55));
     border-bottom: 1px solid var(--df-glass-border);
     border-top-left-radius: var(--df-radius-lg);
     border-top-right-radius: var(--df-radius-lg);
@@ -980,11 +1132,19 @@ input#send-command {
     letter-spacing: 0.01em;
 }
 #send-command:focus {
-    border-color: rgba(56, 225, 255, 0.55) !important;
+    border-color: rgb(var(--df-rgb-cyan) / 0.55) !important;
     box-shadow: var(--df-glow-focus) !important;
 }
 
-/* Ensure xterm's own DOM/canvas layers sit flush and transparent so #terminal bg shows */
+/* Ensure xterm's own DOM/canvas layers sit flush and transparent so #terminal bg
+   shows through.
+   .xterm-scrollable-element is deliberately NOT in this list. That element is
+   the one xterm.js paints from its JS theme option, and because the terminal is
+   constructed with allowTransparency the WebGL renderer draws no background of
+   its own — that inline style is the only thing filling the screen. Forcing it
+   transparent here made the light page bleed straight through the console in the
+   default keep-it-dark state. The screen's colour is settled in JS instead, by
+   activeTheme() choosing a dark preset or PAL_LIGHT; leave it to do that. */
 #terminal .xterm,
 #terminal .xterm-viewport,
 #terminal .xterm-screen {
@@ -993,7 +1153,7 @@ input#send-command {
 
 /* Command input strip under the terminal — align with our aesthetic */
 #send-command {
-    background: rgba(5, 6, 20, 0.6) !important;
+    background: rgb(var(--df-rgb-void) / 0.6) !important;
     color: var(--df-ink) !important;
     font-family: 'JetBrains Mono', ui-monospace, monospace !important;
 }
@@ -1026,21 +1186,21 @@ body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
 
 body[data-df-scan="fine"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-        rgba(94,234,212,0.07) 2px, rgba(94,234,212,0.07) 3px);
+        transparent 0px, transparent 2px,
+        rgb(var(--df-rgb-teal) / 0.07) 2px, rgb(var(--df-rgb-teal) / 0.07) 3px);
     animation: df-scan-fine 9s linear infinite;
 }
 body[data-df-scan="normal"] #terminal::after,
 body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
-        rgba(94,234,212,0.10) 3px, rgba(94,234,212,0.10) 5px);
+        transparent 0px, transparent 3px,
+        rgb(var(--df-rgb-teal) / 0.10) 3px, rgb(var(--df-rgb-teal) / 0.10) 5px);
     animation: df-scan-normal 9s linear infinite;
 }
 body[data-df-scan="heavy"] #terminal::after {
     background: repeating-linear-gradient(to bottom,
-        rgba(0,0,0,0) 0px, rgba(0,0,0,0) 4px,
-        rgba(94,234,212,0.16) 4px, rgba(94,234,212,0.16) 7px);
+        transparent 0px, transparent 4px,
+        rgb(var(--df-rgb-teal) / 0.16) 4px, rgb(var(--df-rgb-teal) / 0.16) 7px);
     animation: df-scan-heavy 9s linear infinite;
 }
 
@@ -1049,19 +1209,19 @@ body[data-df-scan="heavy"] #terminal::after {
 @media (min-resolution: 1.5dppx) {
     body[data-df-scan="fine"] #terminal::after {
         background: repeating-linear-gradient(to bottom,
-            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px,
-            rgba(94,234,212,0.10) 2px, rgba(94,234,212,0.10) 3px);
+            transparent 0px, transparent 2px,
+            rgb(var(--df-rgb-teal) / 0.10) 2px, rgb(var(--df-rgb-teal) / 0.10) 3px);
     }
     body[data-df-scan="normal"] #terminal::after,
     body[data-df-crt="1"]:not([data-df-scan]) #terminal::after {
         background: repeating-linear-gradient(to bottom,
-            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 3px,
-            rgba(94,234,212,0.14) 3px, rgba(94,234,212,0.14) 5px);
+            transparent 0px, transparent 3px,
+            rgb(var(--df-rgb-teal) / 0.14) 3px, rgb(var(--df-rgb-teal) / 0.14) 5px);
     }
     body[data-df-scan="heavy"] #terminal::after {
         background: repeating-linear-gradient(to bottom,
-            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 4px,
-            rgba(94,234,212,0.21) 4px, rgba(94,234,212,0.21) 7px);
+            transparent 0px, transparent 4px,
+            rgb(var(--df-rgb-teal) / 0.21) 4px, rgb(var(--df-rgb-teal) / 0.21) 7px);
     }
 }
 
@@ -1074,18 +1234,18 @@ body[data-df-scan="heavy"] #terminal::after {
 
 /* ---- Terminal bell — aurora border flash ---- */
 @keyframes df-bell-flash {
-    0%   { box-shadow: 0 0 0 0 rgba(56, 225, 255, 0.0), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-glass-border-strong); }
-    30%  { box-shadow: 0 0 30px 6px rgba(94, 234, 212, 0.65), 0 0 60px 12px rgba(167, 139, 250, 0.4), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-cyan); }
-    100% { box-shadow: 0 0 0 0 rgba(56, 225, 255, 0.0), inset 0 0 60px rgba(11, 10, 30, 0.6); border-color: var(--df-glass-border-strong); }
+    0%   { box-shadow: 0 0 0 0 transparent, inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); border-color: var(--df-glass-border-strong); }
+    30%  { box-shadow: 0 0 30px 6px rgb(var(--df-rgb-teal) / 0.65), 0 0 60px 12px rgb(var(--df-rgb-violet) / 0.4), inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); border-color: var(--df-cyan); }
+    100% { box-shadow: 0 0 0 0 transparent, inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); border-color: var(--df-glass-border-strong); }
 }
 #terminal.df-bell-flash { animation: df-bell-flash 700ms var(--df-ease-out) 1; }
 
 /* ---- Idle border pulse — subtle aurora cycle after 8s of no output ---- */
 @keyframes df-idle-pulse {
-    0%   { border-color: rgba(56, 225, 255, 0.35);  box-shadow: 0 0 20px rgba(56, 225, 255, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
-    33%  { border-color: rgba(94, 234, 212, 0.35);  box-shadow: 0 0 20px rgba(94, 234, 212, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
-    66%  { border-color: rgba(167, 139, 250, 0.35); box-shadow: 0 0 20px rgba(167, 139, 250, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
-    100% { border-color: rgba(56, 225, 255, 0.35);  box-shadow: 0 0 20px rgba(56, 225, 255, 0.15), inset 0 0 60px rgba(11, 10, 30, 0.6); }
+    0%   { border-color: rgb(var(--df-rgb-cyan) / 0.35);  box-shadow: 0 0 20px rgb(var(--df-rgb-cyan) / 0.15), inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); }
+    33%  { border-color: rgb(var(--df-rgb-teal) / 0.35);  box-shadow: 0 0 20px rgb(var(--df-rgb-teal) / 0.15), inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); }
+    66%  { border-color: rgb(var(--df-rgb-violet) / 0.35); box-shadow: 0 0 20px rgb(var(--df-rgb-violet) / 0.15), inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); }
+    100% { border-color: rgb(var(--df-rgb-cyan) / 0.35);  box-shadow: 0 0 20px rgb(var(--df-rgb-cyan) / 0.15), inset 0 0 60px rgb(var(--df-rgb-deep) / 0.6); }
 }
 #terminal.df-idle { animation: df-idle-pulse 6s ease-in-out infinite; }
 
@@ -1106,7 +1266,7 @@ body[data-df-scan="heavy"] #terminal::after {
     z-index: 1000;
     pointer-events: none;
     animation: df-toast-in 220ms var(--df-ease-out) both;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 12px rgba(94, 234, 212, 0.3);
+    box-shadow: 0 4px 18px rgb(var(--df-rgb-shadow) / calc(0.5 * var(--df-shadow-k))), 0 0 12px rgb(var(--df-rgb-teal) / 0.3);
     inset: auto 0.75rem auto auto;
     background-image: none;
     mix-blend-mode: normal;
@@ -1122,8 +1282,8 @@ body[data-df-scan="heavy"] #terminal::after {
 .xterm a,
 .xterm-hover-link {
     color: var(--df-cyan) !important;
-    text-shadow: 0 0 6px rgba(56, 225, 255, 0.6);
-    text-decoration: underline dotted rgba(94, 234, 212, 0.7);
+    text-shadow: 0 0 6px rgb(var(--df-rgb-cyan) / 0.6);
+    text-decoration: underline dotted rgb(var(--df-rgb-teal) / 0.7);
     text-underline-offset: 3px;
 }
 
@@ -1140,14 +1300,14 @@ body[data-df-scan="heavy"] #terminal::after {
     background: var(--df-glass-modal) !important;
     border: 1px solid var(--df-glass-border-strong) !important;
     border-radius: var(--df-radius-md) !important;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 225, 255, 0.15);
+    box-shadow: 0 8px 30px rgb(var(--df-rgb-shadow) / calc(0.6 * var(--df-shadow-k))), 0 0 20px rgb(var(--df-rgb-cyan) / 0.15);
     backdrop-filter: blur(10px);
     color: var(--df-ink);
     font-family: 'JetBrains Mono', monospace !important;
 }
 .xterm-search-bar input,
 .xterm-search-bar__input {
-    background: rgba(5, 6, 20, 0.6) !important;
+    background: rgb(var(--df-rgb-void) / 0.6) !important;
     color: var(--df-ink) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-sm) !important;
@@ -1161,7 +1321,7 @@ body[data-df-scan="heavy"] #terminal::after {
 }
 .xterm-search-bar button,
 .xterm-search-bar__button {
-    background: rgba(167, 139, 250, 0.10) !important;
+    background: rgb(var(--df-rgb-violet) / 0.10) !important;
     color: var(--df-ink-soft) !important;
     border: 1px solid var(--df-glass-border) !important;
     border-radius: var(--df-radius-sm) !important;
@@ -1239,7 +1399,7 @@ body[data-df-auth="1"] .fi-simple-layout::before {
     top: 3rem;
     left: 50%;
     transform: translateX(-50%);
-    font-family: 'Orbitron', sans-serif;
+    font-family: var(--df-font-display);
     font-size: clamp(2rem, 4vw, 3.5rem);
     font-weight: 700;
     letter-spacing: 0.28em;
@@ -1247,7 +1407,7 @@ body[data-df-auth="1"] .fi-simple-layout::before {
     background: var(--df-aurora);
     -webkit-background-clip: text;
     background-clip: text;
-    text-shadow: 0 0 40px rgba(94, 234, 212, 0.35);
+    text-shadow: 0 0 40px rgb(var(--df-rgb-teal) / 0.35);
     pointer-events: none;
     z-index: 10;
     white-space: nowrap;
@@ -1282,8 +1442,8 @@ body[data-df-auth="1"] .fi-simple-page-content {
     border-radius: var(--df-radius-lg) !important;
     padding: 2.5rem !important;
     box-shadow:
-        0 30px 80px -20px rgba(0, 0, 0, 0.65),
-        0 0 40px rgba(94, 234, 212, 0.10) !important;
+        0 30px 80px -20px rgb(var(--df-rgb-shadow) / calc(0.65 * var(--df-shadow-k))),
+        0 0 40px rgb(var(--df-rgb-teal) / 0.10) !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 1.25rem !important;
@@ -1317,7 +1477,7 @@ body[data-df-auth="1"] .fi-simple-layout footer {
 
 body[data-df-auth="1"] .fi-simple-header,
 body[data-df-auth="1"] .fi-simple-heading {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: var(--df-font-display) !important;
     letter-spacing: 0.03em;
     text-shadow: var(--df-glow-h1);
     text-align: center;
@@ -1366,7 +1526,7 @@ body[data-df-auth="1"] .fi-simple-heading {
 .fi-tabs-item.fi-active {
     color: var(--df-cyan) !important;
     border-bottom-color: var(--df-cyan) !important;
-    text-shadow: 0 0 8px rgba(56, 225, 255, 0.4);
+    text-shadow: 0 0 8px rgb(var(--df-rgb-cyan) / 0.4);
 }
 
 /* =============================================================
@@ -1377,9 +1537,9 @@ body[data-df-auth="1"] .fi-simple-heading {
 [class*="user-header"],
 [class*="profile-header"] {
     background: linear-gradient(120deg,
-        rgba(11, 10, 30, 0.85),
-        rgba(18, 17, 42, 0.85) 60%,
-        rgba(11, 10, 30, 0.85)) !important;
+        rgb(var(--df-rgb-deep) / 0.85),
+        rgb(var(--df-rgb-shelf) / 0.85) 60%,
+        rgb(var(--df-rgb-deep) / 0.85)) !important;
     border: 1px solid var(--df-glass-border);
     border-radius: var(--df-radius-lg);
     padding: 1.25rem 1.5rem !important;
@@ -1418,9 +1578,9 @@ body[data-df-auth="1"] .fi-simple-heading {
 [class*="animate-pulse"] > * {
     background: linear-gradient(
         90deg,
-        rgba(167, 139, 250, 0.08) 0%,
-        rgba(94, 234, 212, 0.18) 50%,
-        rgba(167, 139, 250, 0.08) 100%
+        rgb(var(--df-rgb-violet) / 0.08) 0%,
+        rgb(var(--df-rgb-teal) / 0.18) 50%,
+        rgb(var(--df-rgb-violet) / 0.08) 100%
     ) !important;
     background-size: 200% 100% !important;
     animation: df-shimmer 1.8s linear infinite !important;
@@ -1449,10 +1609,10 @@ body[data-df-auth="1"] .fi-simple-heading {
 .fi-ta-empty-state-heading,
 [class*="empty-state"] h2,
 [class*="empty-state"] h3 {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: var(--df-font-display) !important;
     letter-spacing: 0.04em;
     color: var(--df-ink);
-    text-shadow: 0 0 16px rgba(94, 234, 212, 0.3);
+    text-shadow: 0 0 16px rgb(var(--df-rgb-teal) / 0.3);
     margin-top: 1rem;
 }
 
@@ -1466,7 +1626,7 @@ body[data-df-auth="1"] .fi-simple-heading {
 .fi-ta-empty-state-icon-ctn::before,
 [class*="empty-state"] > svg:first-child {
     color: var(--df-violet) !important;
-    filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.5));
+    filter: drop-shadow(0 0 12px rgb(var(--df-rgb-violet) / 0.5));
 }
 
 /* =============================================================
@@ -1480,7 +1640,7 @@ button[wire\\:loading] {
     color: transparent !important;
     pointer-events: none;
     background-image: none !important;
-    background-color: rgba(11, 10, 30, 0.85) !important;
+    background-color: rgb(var(--df-rgb-deep) / 0.85) !important;
 }
 
 .fi-btn[wire\\:loading]::after,
@@ -1497,7 +1657,7 @@ button[wire\\:loading]::after {
     border-top-color: var(--df-cyan);
     border-right-color: var(--df-teal);
     animation: df-orbit 700ms linear infinite;
-    box-shadow: 0 0 12px rgba(56, 225, 255, 0.55);
+    box-shadow: 0 0 12px rgb(var(--df-rgb-cyan) / 0.55);
 }
 
 @keyframes df-orbit {
@@ -1517,11 +1677,11 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="start"],
 .fi-btn:has(.fi-icon[class*="player-play"]),
 .fi-btn:has(svg[class*="player-play"]) {
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.32), rgba(52, 211, 153, 0.12)) !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(52, 211, 153, 0.55) !important;
-    box-shadow: 0 0 22px rgba(52, 211, 153, 0.35), inset 0 0 20px rgba(52, 211, 153, 0.06) !important;
-    text-shadow: 0 0 8px rgba(52, 211, 153, 0.55);
+    background: linear-gradient(135deg, rgb(var(--df-rgb-running) / 0.32), rgb(var(--df-rgb-running) / 0.12)) !important;
+    color: var(--df-status-running) !important;
+    border: 1px solid rgb(var(--df-rgb-running) / 0.55) !important;
+    box-shadow: 0 0 22px rgb(var(--df-rgb-running) / 0.35), inset 0 0 20px rgb(var(--df-rgb-running) / 0.06) !important;
+    text-shadow: 0 0 8px rgb(var(--df-rgb-running) / 0.55);
     font-weight: 600;
     padding: 0.55rem 1.1rem !important;
     letter-spacing: 0.02em;
@@ -1530,11 +1690,11 @@ button[wire\\:loading]::after {
 .fi-btn[wire\:click*="restart"],
 .fi-btn:has(.fi-icon[class*="refresh"]),
 .fi-btn:has(svg[class*="refresh"]) {
-    background: linear-gradient(135deg, rgba(250, 204, 21, 0.32), rgba(250, 204, 21, 0.12)) !important;
-    color: #facc15 !important;
-    border: 1px solid rgba(250, 204, 21, 0.55) !important;
-    box-shadow: 0 0 22px rgba(250, 204, 21, 0.35), inset 0 0 20px rgba(250, 204, 21, 0.06) !important;
-    text-shadow: 0 0 8px rgba(250, 204, 21, 0.55);
+    background: linear-gradient(135deg, rgb(var(--df-rgb-starting) / 0.32), rgb(var(--df-rgb-starting) / 0.12)) !important;
+    color: var(--df-status-starting) !important;
+    border: 1px solid rgb(var(--df-rgb-starting) / 0.55) !important;
+    box-shadow: 0 0 22px rgb(var(--df-rgb-starting) / 0.35), inset 0 0 20px rgb(var(--df-rgb-starting) / 0.06) !important;
+    text-shadow: 0 0 8px rgb(var(--df-rgb-starting) / 0.55);
     font-weight: 600;
     padding: 0.55rem 1.1rem !important;
     letter-spacing: 0.02em;
@@ -1548,11 +1708,11 @@ button[wire\\:loading]::after {
 .fi-btn:has(svg[class*="player-stop"]),
 .fi-btn:has(.fi-icon[class*="trash"]),
 .fi-btn:has(svg[class*="trash"]) {
-    background: linear-gradient(135deg, rgba(248, 113, 113, 0.32), rgba(248, 113, 113, 0.12)) !important;
-    color: #f87171 !important;
-    border: 1px solid rgba(248, 113, 113, 0.55) !important;
-    box-shadow: 0 0 22px rgba(248, 113, 113, 0.35), inset 0 0 20px rgba(248, 113, 113, 0.06) !important;
-    text-shadow: 0 0 8px rgba(248, 113, 113, 0.55);
+    background: linear-gradient(135deg, rgb(var(--df-rgb-offline) / 0.32), rgb(var(--df-rgb-offline) / 0.12)) !important;
+    color: var(--df-status-offline) !important;
+    border: 1px solid rgb(var(--df-rgb-offline) / 0.55) !important;
+    box-shadow: 0 0 22px rgb(var(--df-rgb-offline) / 0.35), inset 0 0 20px rgb(var(--df-rgb-offline) / 0.06) !important;
+    text-shadow: 0 0 8px rgb(var(--df-rgb-offline) / 0.55);
     font-weight: 600;
     padding: 0.55rem 1.1rem !important;
     letter-spacing: 0.02em;

@@ -32,6 +32,8 @@
         resizeObs: null,
         listeners: [],
         visHandler: null,
+        themeObs: null,
+        light: false,
         started: false,
     };
 
@@ -43,6 +45,44 @@
     };
     const PARALLAX_TIERS = [0.010, 0.025, 0.050];
 
+    /* The backdrop is drawn on canvas, so it cannot inherit the CSS palette —
+       it needs its own copy of both modes. Dark paints emissive points on the
+       void; light paints settling dust in a bright room, which means darker
+       ink than its backdrop, much lower alpha, and no meteors: a shooting
+       star in broad daylight reads as a rendering bug, not an effect. */
+    const PAINT = {
+        dark: {
+            star:    (a) => `rgba(232, 240, 255, ${a.toFixed(3)})`,
+            halo:    (a) => `rgba(56, 225, 255, ${(a * 0.10).toFixed(3)})`,
+            meteors: true,
+            drift:   false,
+            twinkle: true,
+            nebula:  (hue, a) => [
+                `hsla(${hue}, 80%, 55%, ${a})`,
+                `hsla(${hue}, 80%, 40%, ${(a * 0.3).toFixed(3)})`,
+            ],
+        },
+        light: {
+            star:    (a) => `rgba(70, 80, 125, ${(a * 0.42).toFixed(3)})`,
+            halo:    (a) => `rgba(14, 116, 144, ${(a * 0.05).toFixed(3)})`,
+            meteors: false,
+            drift:   true,
+            twinkle: false,
+            nebula:  (hue, a) => [
+                `hsla(${hue}, 62%, 62%, ${(a * 0.42).toFixed(3)})`,
+                `hsla(${hue}, 62%, 55%, ${(a * 0.12).toFixed(3)})`,
+            ],
+        },
+    };
+
+    function paint() {
+        return state.light ? PAINT.light : PAINT.dark;
+    }
+
+    function isLight() {
+        return !document.documentElement.classList.contains('dark');
+    }
+
     // ---- Settings ingest -------------------------------------------------
     function readSettings() {
         try {
@@ -50,6 +90,7 @@
             if (meta) Object.assign(state.settings, JSON.parse(meta.content));
         } catch (e) { /* ignore */ }
         state.prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        state.light = isLight();
         document.body.setAttribute('data-df-crt', state.settings.crt_bloom ? '1' : '0');
     }
 
@@ -88,6 +129,10 @@
                    : (0.15 + Math.random() * 0.3),
                 twk: Math.random() * Math.PI * 2,
                 twkSpeed: 0.4 + Math.random() * 1.2,
+                // Light mode drifts instead of twinkling: dust settling through
+                // a sunlit room. Near tiers move faster so the parallax reads.
+                vx: (Math.random() - 0.5) * (0.06 + tier * 0.05),
+                vy: (0.04 + Math.random() * 0.10) * (0.5 + tier * 0.4),
                 tier,
             });
         }
@@ -104,27 +149,37 @@
         state.pointer.y += (state.pointer.ty - state.pointer.y) * 0.06;
 
         const cx = w / 2, cy = h / 2;
+        const pt = paint();
 
         for (const s of state.stars) {
             const p = PARALLAX_TIERS[s.tier];
             const dx = (state.pointer.x - cx) * p;
             const dy = (state.pointer.y - cy) * p;
 
+            if (pt.drift && motionAllowed()) {
+                s.x += s.vx;
+                s.y += s.vy;
+                // Wrap rather than respawn so density stays constant.
+                if (s.y - s.r > h) { s.y = -s.r; s.x = Math.random() * w; }
+                if (s.x < -s.r) s.x = w + s.r;
+                else if (s.x > w + s.r) s.x = -s.r;
+            }
+
             // gentle twinkle for near/mid only
             let alpha = s.a;
-            if (motionAllowed() && s.tier > 0) {
+            if (pt.twinkle && motionAllowed() && s.tier > 0) {
                 alpha = s.a * (0.75 + 0.25 * Math.sin(ts * 0.0006 * s.twkSpeed + s.twk));
             }
 
             ctx.beginPath();
             ctx.arc(s.x + dx, s.y + dy, s.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(232, 240, 255, ${alpha.toFixed(3)})`;
+            ctx.fillStyle = pt.star(alpha);
             ctx.fill();
 
             if (s.tier === 2) {
                 ctx.beginPath();
                 ctx.arc(s.x + dx, s.y + dy, s.r * 2.2, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(56, 225, 255, ${(alpha * 0.10).toFixed(3)})`;
+                ctx.fillStyle = pt.halo(alpha);
                 ctx.fill();
             }
         }
@@ -157,7 +212,7 @@
     }
 
     function spawnMeteor() {
-        if (!motionAllowed()) return;
+        if (!motionAllowed() || !paint().meteors) return;
         const w = window.innerWidth, h = window.innerHeight;
         const startX = Math.random() * w * 0.6;
         const startY = -20;
@@ -191,10 +246,13 @@
             { x: w * (0.75 + Math.cos(drift * 0.8) * 0.06), y: h * (0.70 + Math.sin(drift * 1.2) * 0.05), r: Math.max(w, h) * 0.50, hue: hue2, alpha: 0.28 },
         ];
 
+        const nebula = paint().nebula;
+
         for (const b of blobs) {
+            const [inner, mid] = nebula(b.hue, b.alpha);
             const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-            grad.addColorStop(0.0, `hsla(${b.hue}, 80%, 55%, ${b.alpha})`);
-            grad.addColorStop(0.5, `hsla(${b.hue}, 80%, 40%, ${(b.alpha * 0.3).toFixed(3)})`);
+            grad.addColorStop(0.0, inner);
+            grad.addColorStop(0.5, mid);
             grad.addColorStop(1.0, 'hsla(0, 0%, 0%, 0)');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, w, h);
@@ -226,7 +284,9 @@
             state.rafStar = requestAnimationFrame(drawStars);
         }
 
-        if (motionAllowed() && state.settings.star_density !== 'off') {
+        // Light mode has no meteors, so don't arm a timer that would wake every
+        // few seconds only to return.
+        if (paint().meteors && motionAllowed() && state.settings.star_density !== 'off') {
             state.meteorTimer = setInterval(spawnMeteor, 3500 + Math.random() * 2500);
         }
 
@@ -290,6 +350,19 @@
     document.addEventListener('livewire:navigated', reinit);
     document.addEventListener('turbo:load',    reinit);
     document.addEventListener('turbo:render',  reinit);
+
+    /* The theme switcher toggles .dark on <html> without a navigation, so
+       nothing above fires. CSS follows instantly because it is token-driven,
+       but the canvases hold whichever palette they were built with — repaint
+       them when, and only when, the mode actually flips. */
+    state.themeObs = new MutationObserver(() => {
+        if (isLight() === state.light) return;
+        reinit();
+    });
+    state.themeObs.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class'],
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);

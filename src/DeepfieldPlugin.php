@@ -5,6 +5,7 @@ namespace Gurvinny\Deepfield;
 use App\Contracts\Plugins\HasPluginSettings;
 use App\Traits\EnvironmentWriterTrait;
 use Filament\Contracts\Plugin;
+use Filament\Enums\ThemeMode;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -28,6 +29,22 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
      * @var array<string, array{env: string, type: string, default: mixed, values?: string[]}>
      */
     public const SETTINGS = [
+        'theme_mode' => [
+            'env' => 'DEEPFIELD_THEME_MODE',
+            'type' => 'enum',
+            'default' => 'dark',
+            'values' => ['dark', 'light', 'system'],
+        ],
+        'panel_colors' => [
+            'env' => 'DEEPFIELD_PANEL_COLORS',
+            'type' => 'bool',
+            'default' => true,
+        ],
+        'console_always_dark' => [
+            'env' => 'DEEPFIELD_CONSOLE_ALWAYS_DARK',
+            'type' => 'bool',
+            'default' => true,
+        ],
         'star_density' => [
             'env' => 'DEEPFIELD_STAR_DENSITY',
             'type' => 'enum',
@@ -121,17 +138,42 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
     {
         $this->publishAssets();
 
+        $settings = $this->settings();
+
+        /*
+         * Set the panel's *default* mode rather than forcing one.
+         *
+         * Deepfield used to add .dark and write localStorage.theme = 'dark' from
+         * a head script. Filament stores the user's own choice under that exact
+         * key and the head.end hook runs after Filament's own theme script, so
+         * the plugin overwrote that choice on every page load and every Livewire
+         * navigation — which is what made the theme switcher, and the Theme
+         * Customizer plugin, look broken. defaultThemeMode() only supplies the
+         * fallback for a user who has not chosen yet.
+         */
         $panel
-            ->colors([
+            ->defaultThemeMode(ThemeMode::tryFrom($settings['theme_mode']) ?? ThemeMode::Dark)
+            ->renderHook('panels::head.end', fn () => $this->renderHead())
+            ->renderHook('panels::body.start', fn () => $this->renderBody());
+
+        /*
+         * Filament merges ->colors() per key and the last plugin to register
+         * wins, so hardcoding all six roles quietly overrode whatever the admin
+         * had picked in Theme Customizer — and which one won depended on plugin
+         * load order. Deepfield's stylesheet does not depend on these; they only
+         * tune Filament's own component colours. Turning this off hands the
+         * palette to the other plugin cleanly.
+         */
+        if ($settings['panel_colors']) {
+            $panel->colors([
                 'primary' => Color::Violet,
                 'gray'    => Color::Slate,
                 'danger'  => Color::Rose,
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,
                 'info'    => Color::Cyan,
-            ])
-            ->renderHook('panels::head.end', fn () => $this->renderHead())
-            ->renderHook('panels::body.start', fn () => $this->renderBody());
+            ]);
+        }
     }
 
     public function boot(Panel $panel): void
@@ -190,6 +232,15 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
         $jetbrains    = asset('plugins/deepfield/fonts/JetBrainsMono-Variable.woff2');
         $orbitron     = asset('plugins/deepfield/fonts/Orbitron-Variable.woff2');
 
+        // Orbitron is the dark theme's display face; light mode uses Space Grotesk
+        // for headings instead. Preloading it on a panel that defaults to light
+        // fetches a font nothing renders, which is what the browser's
+        // "preloaded but not used" warning is pointing at. It still loads on
+        // demand for a user who switches to dark.
+        $orbitronPreload = self::coerce('theme_mode', config('deepfield.theme_mode')) === 'light'
+            ? ''
+            : "<link rel=\"preload\" href=\"{$orbitron}\" as=\"font\" type=\"font/woff2\" crossorigin>";
+
         // SVG favicon — aurora gradient orbit.
         // Use literal `#` in the SVG; rawurlencode() does the escaping.
         // Previously had `%23` literals inside the string AND rawurlencode
@@ -212,7 +263,10 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 <link rel="icon" type="image/svg+xml" href="{$favicon}">
 <script>
 (function(){
-  try{document.documentElement.classList.add('dark');localStorage.setItem('theme','dark');}catch(e){}
+  /* No theme forcing here. Filament has already resolved the mode from
+     localStorage.theme (the user's choice) falling back to the panel's
+     defaultThemeMode, which register() sets. Writing that key from this hook
+     is what used to overwrite the choice on every page load. */
   /* Route markers — set body attributes so route-specific CSS only applies where it should.
      Body doesn't exist yet at head-time, so defer to DOMContentLoaded, and re-run on Livewire nav. */
   function markRoute(){
@@ -296,10 +350,61 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
     }
   };
 
+  /* The four presets above are all dark-on-dark: every one of them pairs a
+     near-black background with a near-white foreground. Handing any of them a
+     light backdrop gives white text on white. So when the console is asked to
+     follow light mode there is one light palette rather than four, built from
+     the same aurora hues walked down until each clears 4.5:1 on white. The
+     background is fully transparent so #terminal's own token-driven surface
+     shows through, which is what keeps it in step with the rest of the page. */
+  var PAL_LIGHT = {
+    background:'rgba(0,0,0,0)', foreground:'#14162b', cursor:'#0e7490', cursorAccent:'#ffffff',
+    selectionBackground:'rgba(15,118,110,0.28)', selectionForeground:'#14162b',
+    /* Every slot clears 4.5:1 against the light console surface (min 5.01), and
+       "bright" runs darker than its base rather than lighter — the usual
+       convention inverts on a light backdrop, where a lighter variant is the
+       one that disappears. That is also why white/brightWhite are the two
+       strongest inks here rather than the two faintest. */
+    black:'#1f2430', brightBlack:'#4b5563',
+    red:'#991b1b',   brightRed:'#b91c1c',
+    green:'#065f46', brightGreen:'#047857',
+    yellow:'#854d0e',brightYellow:'#a1520a',
+    blue:'#1e40af',  brightBlue:'#1d4ed8',
+    magenta:'#86198f', brightMagenta:'#a21caf',
+    cyan:'#155e75',  brightCyan:'#0e7490',
+    white:'#4b5563', brightWhite:'#111827'
+  };
+
   /* Read settings from meta */
   var CFG = { terminal_palette:'cosmic', crt_bloom:true, reduce_motion:false };
   try { var m = document.querySelector('meta[name="df-settings"]'); if (m) Object.assign(CFG, JSON.parse(m.content)); } catch(e){}
-  var THEME = PAL[CFG.terminal_palette] || PAL.cosmic;
+
+  /* Resolved per terminal rather than once: the mode can change under us. */
+  function activeTheme(){
+    var followsLight = document.body
+      && document.body.getAttribute('data-df-console') === 'auto'
+      && !document.documentElement.classList.contains('dark');
+    return followsLight ? PAL_LIGHT : (PAL[CFG.terminal_palette] || PAL.cosmic);
+  }
+
+  /* xterm.js reads its theme at construction and paints the scrollable element
+     with an inline background, so a live theme switch has to push the new
+     palette into each terminal that already exists. */
+  var terminals = [];
+  function repaintTerminals(){
+    var theme = activeTheme();
+    for (var i = terminals.length - 1; i >= 0; i--) {
+      var t = terminals[i];
+      if (!t || !document.getElementById('terminal')) { terminals.splice(i, 1); continue; }
+      try {
+        if (t.options) t.options.theme = theme;
+        else if (typeof t.setOption === 'function') t.setOption('theme', theme);
+      } catch(e){ terminals.splice(i, 1); }
+    }
+  }
+  new MutationObserver(repaintTerminals).observe(document.documentElement, {
+    attributes: true, attributeFilter: ['class']
+  });
 
   /* Terminal instance hooks — installed after constructor */
   function installHooks(term){
@@ -393,9 +498,10 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
     var Orig = x.Terminal;
     var Patched = function(opts){
       opts = opts || {};
-      opts.theme = Object.assign({}, opts.theme, THEME);
+      opts.theme = Object.assign({}, opts.theme, activeTheme());
       opts.allowTransparency = true;
       var t = new Orig(opts);
+      terminals.push(t);
       requestAnimationFrame(function(){ installHooks(t); });
       return t;
     };
@@ -419,7 +525,7 @@ class DeepfieldPlugin implements Plugin, HasPluginSettings
 </script>
 <link rel="preload" href="{$spaceGrotesk}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{$jetbrains}" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="{$orbitron}" as="font" type="font/woff2" crossorigin>
+{$orbitronPreload}
 <link rel="stylesheet" href="{$cssHref}">
 HTML;
     }
@@ -433,10 +539,29 @@ HTML;
         // coerce() has already reduced this to one of the allowlisted literals.
         $scan = json_encode(self::coerce('scanline_density', config('deepfield.scanline_density')));
 
+        // Drives the light-mode console opt-out in the stylesheet: with this set,
+        // the terminal keeps the dark palette even while the panel is light.
+        $console = json_encode(
+            self::coerce('console_always_dark', config('deepfield.console_always_dark')) ? 'dark' : 'auto'
+        );
+
+        // Mirrors the panel_colors setting into the stylesheet. Turning the
+        // setting off has to release the primary/danger/success/warning buttons
+        // too, not just Filament's registered colour roles — those button rules
+        // carry !important and would otherwise keep overriding whichever plugin
+        // the admin handed the palette to.
+        $colors = json_encode(
+            self::coerce('panel_colors', config('deepfield.panel_colors')) ? '1' : '0'
+        );
+
         return <<<HTML
 <canvas id="df-nebula" aria-hidden="true"></canvas>
 <canvas id="df-starfield" aria-hidden="true"></canvas>
-<script>document.body.setAttribute('data-df-scan',{$scan});</script>
+<script>
+document.body.setAttribute('data-df-scan',{$scan});
+document.body.setAttribute('data-df-console',{$console});
+document.body.setAttribute('data-df-colors',{$colors});
+</script>
 <script defer src="{$jsSrc}"></script>
 HTML;
     }
@@ -471,6 +596,27 @@ HTML;
     public function getSettingsForm(): array
     {
         return [
+            Section::make(trans('deepfield::strings.section_theme'))
+                ->description(trans('deepfield::strings.section_theme_help'))
+                ->collapsible()
+                ->schema([
+                    Select::make('theme_mode')
+                        ->label(trans('deepfield::strings.theme_mode'))
+                        ->helperText(trans('deepfield::strings.theme_mode_help'))
+                        ->options([
+                            'dark'   => trans('deepfield::strings.mode_dark'),
+                            'light'  => trans('deepfield::strings.mode_light'),
+                            'system' => trans('deepfield::strings.mode_system'),
+                        ])
+                        ->native(false)
+                        ->required(),
+
+                    Toggle::make('panel_colors')
+                        ->label(trans('deepfield::strings.panel_colors'))
+                        ->helperText(trans('deepfield::strings.panel_colors_help'))
+                        ->inline(false),
+                ]),
+
             Section::make(trans('deepfield::strings.section_background'))
                 ->description(trans('deepfield::strings.section_background_help'))
                 ->collapsible()
@@ -538,6 +684,11 @@ HTML;
                         ])
                         ->native(false)
                         ->required(),
+
+                    Toggle::make('console_always_dark')
+                        ->label(trans('deepfield::strings.console_always_dark'))
+                        ->helperText(trans('deepfield::strings.console_always_dark_help'))
+                        ->inline(false),
                 ]),
 
             Section::make(trans('deepfield::strings.section_motion'))
