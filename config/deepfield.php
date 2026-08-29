@@ -10,6 +10,9 @@
  */
 
 return [
+    'theme_mode'          => 'dark',                                     // dark|light|system — the panel default, not a lock
+    'panel_colors'        => true,                                       // false hands Filament's colour roles to another plugin
+    'console_always_dark' => true,                                       // keep the terminal dark while the panel is light
     'star_density'      => 'medium',                                     // off|low|medium|high
     'nebula_enabled'    => true,
     'nebula_hue'        => 'violet',                                     // violet|teal|rose
