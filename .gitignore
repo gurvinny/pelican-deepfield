@@ -14,3 +14,6 @@ Thumbs.db
 
 *.log
 *.zip
+
+# Marketing renders are regenerable: node marketing/build.js
+marketing/hub/
