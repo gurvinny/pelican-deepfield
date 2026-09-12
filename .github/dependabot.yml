@@ -1,0 +1,14 @@
+# Pelican Deepfield — automated dependency updates
+# Author: gurvinny
+#
+# Only github-actions applies here. The plugin ships as source and is
+# consumed by the host panel's own composer install, so there is no
+# composer.json or package.json in this repo for Dependabot to track.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
