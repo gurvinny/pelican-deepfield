@@ -1,0 +1,83 @@
+# Pelican Deepfield CI
+# Author: gurvinny
+#
+# release.yml is tag-triggered, so pull requests received no checks at all --
+# a PR here reported nothing and could be merged on nothing.
+#
+# The version-consistency check is the one worth having early. release.yml
+# already refuses to publish when the tag, plugin.json and update.json
+# disagree, but that fires at tag time, when the mistake is already committed
+# and the fix is a retag. Running it on the PR catches it while it is still an
+# edit.
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+# Least privilege: this workflow only reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # 2.35.5
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      # The panel targets PHP 8.3+, so a syntax error only that version would
+      # catch must fail here rather than on someone's server.
+      - name: PHP syntax check
+        run: |
+          status=0
+          while IFS= read -r file; do
+              php -l "$file" || status=1
+          done < <(find . -name '*.php' -not -path './.git/*')
+          exit $status
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: JavaScript syntax check
+        run: |
+          status=0
+          for file in js/deepfield.js marketing/build.js; do
+              node --check "$file" || status=1
+          done
+          exit $status
+
+      - name: Manifests parse as JSON
+        run: |
+          jq empty plugin.json
+          jq empty update.json
+
+      # Same rule release.yml enforces at tag time, moved forward to the PR.
+      - name: plugin.json and update.json agree on the version
+        run: |
+          manifest=$(jq -r .version plugin.json)
+          update=$(jq -r '."*".version' update.json)
+          echo "plugin.json $manifest / update.json $update"
+          if [ "$manifest" != "$update" ]; then
+              echo "::error::version mismatch: plugin.json $manifest, update.json $update" >&2
+              exit 1
+          fi
+
+      - name: Shell scripts parse
+        run: bash -n scripts/build-release.sh

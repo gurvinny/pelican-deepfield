@@ -5,7 +5,8 @@
 **A deep-cosmic theme plugin for [Pelican Panel](https://pelican.dev).**
 *Run your servers from the edge of the observable universe.*
 
-![Version](https://img.shields.io/badge/version-1.3.0-a78bfa?style=for-the-badge&labelColor=0b0a1e)
+![Version](https://img.shields.io/github/v/release/gurvinny/pelican-deepfield?style=for-the-badge&label=version&color=a78bfa&labelColor=0b0a1e)
+![CI](https://img.shields.io/github/actions/workflow/status/gurvinny/pelican-deepfield/ci.yml?branch=main&style=for-the-badge&label=CI&color=5eead4&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
@@ -135,6 +136,20 @@ If Pelican bumps to a new major Filament version, open an issue if the compat pa
 ## Changelog
 
 See [releases](https://github.com/gurvinny/pelican-deepfield/releases) for what changed in each version, including upgrade notes.
+
+## Contributing
+
+Issues and pull requests are welcome. Please open an issue before starting
+anything beyond a fix — the theme is opinionated, and it is better to agree on
+direction before the work happens. See [CONTRIBUTING.md](CONTRIBUTING.md) for
+the panel target, the two-palette colour system, and why the theme switcher
+must not be overridden.
+
+## Security
+
+Please do not report security problems in a public issue. Use GitHub's
+[private vulnerability reporting](https://github.com/gurvinny/pelican-deepfield/security/advisories/new)
+instead — see [SECURITY.md](SECURITY.md) for scope and what to expect.
 
 ## License
 
