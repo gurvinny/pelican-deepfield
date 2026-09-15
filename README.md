@@ -7,6 +7,7 @@
 
 ![Version](https://img.shields.io/github/v/release/gurvinny/pelican-deepfield?style=for-the-badge&label=version&color=a78bfa&labelColor=0b0a1e)
 ![CI](https://img.shields.io/github/actions/workflow/status/gurvinny/pelican-deepfield/ci.yml?branch=main&style=for-the-badge&label=CI&color=5eead4&labelColor=0b0a1e)
+![CodeQL](https://img.shields.io/github/actions/workflow/status/gurvinny/pelican-deepfield/codeql.yml?branch=main&style=for-the-badge&label=CodeQL&color=5eead4&labelColor=0b0a1e)
 ![License](https://img.shields.io/badge/license-MIT-38e1ff?style=for-the-badge&labelColor=0b0a1e)
 ![Panel](https://img.shields.io/badge/pelican_panel-%5E1.0-5eead4?style=for-the-badge&labelColor=0b0a1e)
 ![Filament](https://img.shields.io/badge/filament-v5.7-f472b6?style=for-the-badge&labelColor=0b0a1e)
@@ -146,6 +147,10 @@ the panel target, the two-palette colour system, and why the theme switcher
 must not be overridden.
 
 ## Security
+
+CodeQL runs on the JavaScript and the workflows; **it has no PHP analyser, so the
+plugin's PHP is syntax-checked but not scanned**. Trivy covers the tree for
+committed secrets and misconfiguration.
 
 Please do not report security problems in a public issue. Use GitHub's
 [private vulnerability reporting](https://github.com/gurvinny/pelican-deepfield/security/advisories/new)

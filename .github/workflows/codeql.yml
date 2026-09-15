@@ -1,0 +1,52 @@
+# CodeQL static analysis
+# Author: gurvinny
+#
+# Coverage here is PARTIAL and that is worth stating plainly: CodeQL has no
+# PHP support, so src/DeepfieldPlugin.php, the service provider, the config and
+# the language file are NOT analysed. This covers js/deepfield.js,
+# marketing/build.js and the workflow files.
+#
+# The PHP is syntax-checked by ci.yml against 8.3, which is not the same thing
+# as being scanned. Do not read a green badge here as the plugin's logic having
+# been analysed.
+name: CodeQL
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: "23 5 * * 5"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ javascript-typescript, actions ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
